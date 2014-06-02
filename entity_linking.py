@@ -7,6 +7,7 @@ import string
 from collections import Counter
 
 from query import Query
+from term_extraction import TermExtractor
 
 class EntityLinking():
     
@@ -22,19 +23,28 @@ class EntityLinking():
         return self.generate_newtext()
 
     def extract_mentions(self, cand_ms):
-        index = 0
-        words = self.text.split()
-        while index < len(words):
-            print "index",index
-            for i in [5,4,3,2,1]:
-                m = words[index:index+i].lower()
-                if m in cand_ms:
-                    print m
-                    q = Query(m, index, i)
-                    self.queries.append(q)
-                    index = i
-                    break
-            index += 1
+        #index = 0
+        #words = self.text.split()
+        #while index < len(words):
+        #    print "index",index
+        #    for i in [5,4,3,2,1]:
+        #        m = words[index:index+i].lower()
+        #        if m in cand_ms:
+        #            print m
+        #            q = Query(m, index, index+i)
+        #            self.queries.append(q)
+        #            index += i
+        #            break
+        #    index += 1
+
+        te = TermExtractor()
+        for t in te.get_terms(1,self.text):
+            if t.lower() in cand_ms:
+                print t
+                index = self.text.index(t)
+                q = Query(t.lower(), index, index+len(t) )
+                self.queries.append(q)
+            
         print "Find %d mentions"%len(self.queries)
 
     def get_entity(self):
@@ -51,10 +61,10 @@ class Disambiguation():
     def __init__(self, t, q):
         self.best_entity = self.choose_best(t, q)
 
-    def choose_best(self):
+    def choose_best(self, t, q):
         candidates = Candidateset[q.text]
         Entity2Abstract = loadEntityToAbstract(candidates)
-        similar = [similarity(t,Entity2Abstract[c]) for c in candidates]
+        similar = [self.similarity(t, Entity2Abstract[c[1:-1]]) for c in candidates]
         similar = [s if s > threshold else None for s in similar]
         best = max(similar)
         return c[similar.index(best)] if not best == None else None
@@ -113,7 +123,7 @@ def loadEntityToAbstract(candidates):
     print "Entity to abstract loading..."
     for line in open("../../data/enwiki-abstract.dat"):
         line = line.strip("\n").strip("\r")
-        e = line.split("\t")[0]
+        e = line.split("\t")[0].lower()
         if e in candidates:
             Entity2Abstract[e] = line.split("\t")[1]
     return Entity2Abstract
@@ -127,6 +137,16 @@ def loadAbstract():
         a = line.strip("\n").strip("\r")
         yield a
         count -= 1
+
+def loadURI2Entity():
+    global URI2Entity
+    URI2Entity = dict()
+    print "Title to URI..."
+    for line in open("../../data/loreEnwikiTitleURI.dat"):
+        title, uri = line.strip("\n").split("\t\t")
+        uri = uri.split("/")[-1]
+        URI2Entity[uri] = title
+        
 
 # 建立倒排索引
 def create_index():
@@ -150,7 +170,7 @@ def search_index(query):
     if keywords:
         ids = index.get(keywords[0], set())
         for q in keywords[1:]:
-            # 集合的 交 运算
+            #集合的交运算
             ids = ids & index.get(q, set())
         for id in ids:
             print article_map[id]
@@ -158,6 +178,7 @@ def search_index(query):
 
 if __name__=="__main__":
     loadCandidateSet()
+    loadURI2Entity()
     #loadEntityToAbstract()
     for a in loadAbstract():
         e = EntityLinking(a)

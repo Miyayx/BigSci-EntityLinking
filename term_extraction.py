@@ -2,16 +2,16 @@
 #-*-coding:utf-8-*-
 
 LIMIT = 30
-class TermExtraction:
+class TermExtractor:
     def __init__(self, ip="localhost", port=6060, timeout=20):
         self.ip = ip
         self.port = port
         self.timeout = timeout
 
-    def get_term_from_string(self, retry_times, instr):
-        return self.get_terms(retry_times, instr)
-
     def get_terms(self, retry_times, instr):
+        return self.get_limit_terms(retry_times, instr, LIMIT)
+
+    def get_limit_terms(self, retry_times, instr, num):
         terms = []
 
         if retry_times <= 0:
@@ -25,7 +25,7 @@ class TermExtraction:
 
             import socket
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            instr = "<cmd>\nnum="+str(LIMIT)+"\ntype=PhraseOnly\n</cmd>" + instr +"<end>\n"
+            instr = "<cmd>\nnum="+str(num)+"\ntype=PhraseOnly\n</cmd>" + instr +"<end>\n"
             s.connect((self.ip, self.port))
             s.sendall(instr)
             result = s.recv(1024)
@@ -42,8 +42,8 @@ if __name__=="__main__":
         s = s.strip("\n")
         if i > 5:
             break
-        te = TermExtraction()
-        te.get_term_from_string(1,s)
+        te = TermExtractor()
+        te.get_terms(1,s)
 
         i += 1
 
