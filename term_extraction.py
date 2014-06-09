@@ -1,7 +1,7 @@
 #/usr/bin/env python2.7
 #-*-coding:utf-8-*-
 
-LIMIT = 30
+LIMIT = 20
 class TermExtractor:
     def __init__(self, ip="localhost", port=6060, timeout=20):
         self.ip = ip

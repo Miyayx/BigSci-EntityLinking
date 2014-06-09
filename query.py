@@ -11,5 +11,8 @@ class Query():
         self.entity_id = 0
         self.similarity = 0
 
+    def __str__(self):
+        return "Query:::text:%s start:%d end:%d entity id:%s\n"%(self.text, self.start, self.end, self.entity_id)
+
 
         
