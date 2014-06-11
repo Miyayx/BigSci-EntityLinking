@@ -252,7 +252,7 @@ def loadURIToAbstract(candidates):
     #global Entity2Abstract
     URI2Abstract = dict()
     print "Entity to abstract loading..."
-    for line in open("../../data/enwiki-abstract.dat"):
+    for line in open("./data/enwiki-abstract.dat"):
         line = line.strip("\n").strip("\r")
         e = line.split("\t")[0].lower()
         if Entity2URI.has_key(e):
@@ -265,7 +265,7 @@ def loadURIToAbstract(candidates):
 def loadAbstract():
     print "Abstract loading..."
     count = 5
-    for line in open("../../data/abstract.txt"):
+    for line in open("./data/abstract.txt"):
         if count < 0:
             break
         a = line.strip("\n").strip("\r")
@@ -276,7 +276,7 @@ def loadEntity2URI():
     global Entity2URI
     Entity2URI = dict()
     print "Title to URI..."
-    for line in open("../../data/loreEnwikiTitleURI.dat"):
+    for line in open("./data/loreEnwikiTitleURI.dat"):
         title, uri = line.strip("\n").split("\t\t")
         title = title.lower()
         uri = uri.split("/")[-1]
@@ -286,7 +286,7 @@ def loadURI2Entity():
     global URI2Entity
     URI2Entity = dict()
     print "URI to Title..."
-    for line in open("../../data/loreEnwikiTitleURI.dat"):
+    for line in open("./data/loreEnwikiTitleURI.dat"):
         title, uri = line.strip("\n").split("\t\t")
         title = title.lower()
         uri = uri.split("/")[-1]
