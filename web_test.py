@@ -51,7 +51,7 @@ response: format:json:
             {
                 title     : entity title,
                 abstract  : entity abstract,
-                pic       : url of entity picture,
+                image       : url of entity picture,
                 sim       : value of similarity
             },{
                 ...

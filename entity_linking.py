@@ -118,7 +118,6 @@ class QueryEL():
                 for e in es:
                     le = Xlore.get_littleentity()
                     self.entities.append(LittleEntity(**le))
-
             else:
                 pass #no session context
 

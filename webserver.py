@@ -55,7 +55,7 @@ class LinkingResource(Resource):
         entity = {}
         entity["title"] = e.title
         entity["abstract"] = e.abstract
-        entity["pic"]      = e.pic_url
+        entity["image"]    = e.image
         entity["sim"]      = e.sim 
         return entity
 

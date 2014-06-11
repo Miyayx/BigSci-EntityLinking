@@ -81,10 +81,43 @@ class Xlore():
             return fulltext
 
     @staticmethod
-    def get_littleentity(self, entity_id):
+    def get_littleentity(entity_id):
         entity = {}
         entity["uri"] = entity_id
-        sq = ''
+        URL = 'http://xlore.org/sparql.action' 
+        sq = 'select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?title; <http://keg.cs.tsinghua.edu.cn/property/enwiki/abstract> ?abstract}'%entity_id
+        page = unicode(urllib2.urlopen(URL+"?sq="+quote(sq)).read(),'utf-8')
+        soup = BeautifulSoup(page)
+        table = soup.find("table")
+        if len(table.findAll("tr")) == 1:
+            return None
+        else:
+            tds = table.findAll("tr")[1].findAll("td")
+            entity["title"]    = tds[0].text
+            entity["abstract"] = tds[1].text
+            images = Xlore.get_image(entity_id)
+            entity["image"] = images[0] if len(images) > 0 else None
+            return entity
+
+    @staticmethod
+    def get_image(entity_id):
+        image_urls = []
+        lore = ["enwiki","baidu","hudong","zhwiki"]
+        URL = 'http://xlore.org/sparql.action' 
+        for l in lore:
+            sq = 'select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/image> ?img }'%(entity_id, l)
+            page = unicode(urllib2.urlopen(URL+"?sq="+quote(sq)).read(),'utf-8')
+            soup = BeautifulSoup(page)
+            table = soup.find("table")
+            if len(table.findAll("tr")) == 1:
+                continue
+            else:
+                image_urls += [tr.find("td").text for tr in table.findAll("tr")[1:]]
+        return image_urls
+
+    @staticmethod
+    def get_title(entity_id):
+        sq = 'select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?title}'%entity_id
         URL = 'http://xlore.org/sparql.action' 
         page = unicode(urllib2.urlopen(URL+"?sq="+quote(sq)).read(),'utf-8')
         soup = BeautifulSoup(page)
@@ -92,9 +125,9 @@ class Xlore():
         if len(table.findAll("tr")) == 1:
             return None
         else:
-            fulltext = table.findAll("tr")[1].find("td").text
-            return entity
-
+            title = table.findAll("tr")[1].find("td").text
+            return title
+        
 
 if __name__=="__main__":
     #db = DB()
@@ -103,8 +136,9 @@ if __name__=="__main__":
     #db.has_mention("protocal")
 
     xlore = Xlore()
-    xlore.get_fulltext(1032938)
+    print xlore.get_image(1032938)
+    print xlore.get_abstract(1032938)
+    print xlore.get_fulltext(1032938)
+    print xlore.get_title(1032938)
+    print xlore.get_littleentity(1032938)
     
-        
-
-
