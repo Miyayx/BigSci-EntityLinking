@@ -1,3 +1,6 @@
+#!/usr/lib/env/python2.7
+#-*-coding:UTF-8-*-
+
 import urllib2
 import urllib
 from datetime import datetime
@@ -16,10 +19,10 @@ request:
 
     query:
     {
-        type     : "query",
-        query_str: query string,
-        text     : context of query
-        limit    : the max num of related entities
+        type     : "query", 填"query"
+        query_str: query string,查询字符串
+        text     : context of query，查询上下文（暂不考虑）
+        limit    : the max num of related entities,返回的entity数量
         t        : time
     }
 
@@ -45,13 +48,13 @@ response: format:json:
 
     query:
     {
-        query_str : string of query,
-        t         : time
+        query_str : string of query,查询字符串
+        t         : time           ,处理时间
         entity:[
             {
-                title     : entity title,
+                title     : entity title,         
                 abstract  : entity abstract,
-                image       : url of entity picture,
+                image     : urls of entity picture, 可以返回多个图片地址
                 sim       : value of similarity
             },{
                 ...
@@ -94,9 +97,11 @@ def query_test():
     param['limit'] = 0
     param['t'] = datetime.now()
     f = urllib2.urlopen(URL, urllib.urlencode(param))
+    #f = urllib2.urlopen(URL)
     resp = f.read()
+    print f.headers
     print resp
 
 if __name__=="__main__":
-    abstract_test()
-    #query_test()
+    #abstract_test()
+    query_test()

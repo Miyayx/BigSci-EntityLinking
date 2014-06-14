@@ -7,8 +7,12 @@ class LittleEntity():
         self.entity_uri = uri
         self.title    = title
         self.abstract = abstract
-        self.image_url  = image
+        self.image    = image
         self.sim      = similarity
+
+    def __str__(self):
+        return "title:"+str(self.title)+"#"+"uri:"+str(self.entity_uri)+"image_url:"+str(self.image_url)
+
 
 
 

@@ -12,9 +12,16 @@ from entity_linking import QueryEL
 from db import *
 
 class LinkingResource(Resource):
+
     def render_GET(self, request):
+        request.setHeader("Access-Control-Allow-Origin","*")
+        request.setHeader("Content-Type","application/json")
         return 'get'
+
     def render_POST(self, request):
+        request.setHeader("Access-Control-Allow-Origin","*")
+        request.setHeader("Content-Type","application/json")
+
         args = dict((k,v[0]) for k,v in request.args.items())
         print "request args:",args
         if args['type'] == 'abstract':
@@ -32,7 +39,11 @@ class LinkingResource(Resource):
 
         if args['type'] == 'query':
             db = MySQLDB()
+            xlore = Xlore()
             e = QueryEL(args)
+            e.set_db(db)
+            e.set_xlore(xlore)
+            e.run()
             data = {}
             data["query_str"] = e.query_str
             data["entity"] = map(self.parse_query_result, e.entities)
@@ -40,7 +51,6 @@ class LinkingResource(Resource):
         else:
             #raise Exception
             print "NO Such type"
-        return 'post'
 
     def parse_abstract_result(self, q):
         query = {}

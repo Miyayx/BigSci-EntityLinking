@@ -9,6 +9,7 @@ from collections import Counter
 from query import Query
 from term_extraction import TermExtractor
 from db import *
+from little_entity import LittleEntity
 
 class AbstractEL():
     
@@ -32,19 +33,6 @@ class AbstractEL():
         self.db = db
 
     def extract_mentions(self):
-        #index = 0
-        #words = self.text.split()
-        #while index < len(words):
-        #    print "index",index
-        #    for i in [5,4,3,2,1]:
-        #        m = words[index:index+i].lower()
-        #        if m in cand_ms:
-        #            print m
-        #            q = Query(m, index, index+i)
-        #            self.queries.append(q)
-        #            index += i
-        #            break
-        #    index += 1
 
         te = TermExtractor()
         for t in te.get_terms(1,self.text):
@@ -79,7 +67,6 @@ class AbstractEL():
         #            self.queries[i+1].start = self.queries[i+1].start + 4 -1
         #            self.queries[i+1].end = self.queries[i+1].end + 4 -1
 
-        #print self.text
         return self.text
 
 class QueryEL():
@@ -89,20 +76,26 @@ class QueryEL():
         self.text = args["text"]
         self.queries = [] #list of text
         self.entities = []
+        self.limit = args["limit"]
         self.db = None
+        self.xlore = None
 
     def run(self):
-        self.extract_mentions()
+        #self.extract_mentions()
+        self.queries.append(Query(self.query_str, 0, 0))
         self.get_entity()
 
     def set_db(self, db):
         self.db = db
 
+    def set_xlore(self, x):
+        self.xlore = x
+
     def extract_mentions(self):
         mentions = db.get_mentions()
         for m in mentions:
             d = Distance.levenshtein(self.query_str, m)
-            if d > 1000:
+            if d < 10:
                 q = Query(m, 0, 0)
                 self.queries.append(q)
 
@@ -111,16 +104,18 @@ class QueryEL():
     def get_entity(self):
         candidates = []
         for q in self.queries:
+            print q.text
             candidates += self.db.get_candidateset(q.text)
+        print "length of candidates",len(candidates)
         if candidates:
             if self.text:
                 es = Disambiguation(self.text, candidates ).get_best()
-                for e in es:
-                    le = Xlore.get_littleentity()
-                    self.entities.append(LittleEntity(**le))
             else:
-                pass #no session context
-
+                #if no session context, return the most similar title entity
+                es = Disambiguation(self.query_str, candidates).get_best_use_title(3)
+            for e in es:
+                le = self.xlore.get_littleentity(e)
+                self.entities.append(LittleEntity(**le))
 
 class Disambiguation():
 
@@ -129,7 +124,27 @@ class Disambiguation():
         self.candidates = candidates
         self.c_sim = {}
         self.threshold = 0.9
-        self.similar_cal(t, candidates)
+        #self.similar_cal(t, candidates)
+
+    def get_best_use_title(self, num = 0):
+        """
+        Calculate the edit distance between two titles and get the most similar ones
+        """
+
+        if len(self.candidates) == 1:
+            return self.candidates[0]
+
+        for c in self.candidates:
+            t = Xlore().get_title(c)
+            self.c_sim[c] = Distance.levenshtein(self.text, t)
+
+        import operator
+        if num <= 1 or not num:
+            best = min(self.c_sim.iteritems(), key=operator.itemgetter(1))[0]
+            
+        else:
+            best = sorted(self.c_sim.keys(), key=self.c_sim.get)[:num]
+        return best
 
     def get_best(self, num = 0):
         #candidates = Candidateset[q.text]
@@ -150,7 +165,7 @@ class Disambiguation():
         print "candiates:",candidates
         #URI2Abstract = loadURIToAbstract(candidates)
         for c in candidates:
-            a = Xlore.get_abstract(c)
+            a = Xlore().get_abstract(c)
             if a:
                 print c,"has abstract"
                 #similar.append(self.similarity(t, URI2Abstract[c]))
@@ -322,25 +337,46 @@ def search_index(query):
 
 if __name__=="__main__":
     import datetime
-    #loadCandidateSet()
-    loadEntity2URI()
-    #loadURI2Entity()
-    #loadEntityToAbstract()
-    db1 = MySQLDB()
-    with open("new_abstract.txt","w") as f:
-        for a in loadAbstract():
-            param = {}
-            param['type'] = 'abstract'
-            param['paper_id'] = 0
-            param['limit'] = 0
-            param['text'] = a
-            param['t'] = datetime.datetime.now()
-            e = AbstractEL(param)
-            e.set_db(db1)
-           
-            f.write(e.text+"\n\n")
-            e.run()
-            for q in e.queries:
-                f.write(str(q))
-            f.write("\n")
+
+    #################### Abstract Test #####################33
+    ##loadCandidateSet()
+    #loadEntity2URI()
+    ##loadURI2Entity()
+    ##loadEntityToAbstract()
+    #db = MySQLDB()
+    #with open("new_abstract.txt","w") as f:
+    #    for a in loadAbstract():
+    #        param = {}
+    #        param['type'] = 'abstract'
+    #        param['paper_id'] = 0
+    #        param['limit'] = 0
+    #        param['text'] = a
+    #        param['t'] = datetime.datetime.now()
+    #        e = AbstractEL(param)
+    #        e.set_db(db)
+    #       
+    #        f.write(e.text+"\n\n")
+    #        e.run()
+    #        for q in e.queries:
+    #            f.write(str(q))
+    #        f.write("\n")
+
+    #################### Query Test #####################33
+    db = MySQLDB()
+    xlore = Xlore()
+    l = ["machine learning","Japan","China","Beijing","Italy"]
+    for i in l:
+        param = {}
+        param['type']  = 'query'
+        param['limit'] = 0
+        param['text']  = ""
+        param['t']     = datetime.datetime.now()
+        param['query_str'] = i
+        e = QueryEL(param)
+        e.set_db(db)
+        e.set_xlore(xlore)
+        e.run()
+
+        for entity in e.entities:
+            print entity
 
