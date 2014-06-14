@@ -8,13 +8,17 @@ from bs4 import BeautifulSoup
 import urllib2
 from urllib import quote
 
+from utils import *
+
 class MySQLDB():
 
     def __init__(self):
-        self.host   = '10.1.1.23'
-        self.port   = 3306
-        self.user   = 'zjt'
-        self.passwd = 'zjt'
+        configs = ConfigTool.parse_config("db.cfg","MySQL")
+        print "configs:",configs
+        self.host   = configs["host"]
+        self.port   = int(configs["port"])
+        self.user   = configs["user"]
+        self.passwd = configs["password"]
         self.db     = 'entity_linking'
         self.table  = 'mention2entities'
         self.conn   = None
@@ -54,15 +58,16 @@ class MySQLDB():
         self.conn.close()
 
 
-
 class Xlore():
 
-    HOST = "10.1.1.23"
-    PORT = 1111
-    UID = "dba"
-    PWD = "dba"
-    _virtodb = pyodbc.connect('DRIVER=/usr/lib64/virtodbc_r.so;HOST=%s:%d;UID=%s;PWD=%s'%(HOST, PORT, UID, PWD))
-
+    configs = ConfigTool.parse_config("db.cfg","Xlore")
+    print "configs:",configs
+    HOST = configs["host"]
+    PORT = int(configs["port"])
+    UID  = configs["user"]
+    PWD  = configs["password"]
+    DRIVER = configs["driver"]
+    _virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(DRIVER, HOST, PORT, UID, PWD))
     
     def __new__(cls, *args, **kwargs):
         print "__new__"
