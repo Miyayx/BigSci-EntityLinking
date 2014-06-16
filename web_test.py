@@ -64,9 +64,9 @@ response: format:json:
 
 """
 
-#URL = 'http://localhost:5656/linking'
+URL = 'http://localhost:5656/linking'
 #URL = 'http://166.111.68.66:5656/linking'
-URL = 'http://10.1.1.23:5656/linking'
+#URL = 'http://10.1.1.23:5656/linking'
 
 def abstract_test():
     param = {}
@@ -91,19 +91,19 @@ def abstract_test():
         except:
             print "Error!"
 
-def query_test():
+def query_test(q):
     param = {}
     param['type'] = 'query'
-    param['query_str'] = 'machine learning'
+    param['query_str'] = q
     param['text'] = ''
     param['limit'] = 0
     param['t'] = datetime.now()
     f = urllib2.urlopen(URL, urllib.urlencode(param))
     #f = urllib2.urlopen(URL)
     resp = f.read()
-    print f.headers
     print resp
 
 if __name__=="__main__":
     #abstract_test()
-    query_test()
+    for q in ['machine learning','data structure','data mining']:
+        query_test(q)

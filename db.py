@@ -67,8 +67,8 @@ class Xlore():
     UID  = configs["user"]
     PWD  = configs["password"]
     DRIVER = configs["driver"]
-    _virtodb = pyodbc.connect('DRIVER={VOS};HOST=%s:%d;UID=%s;PWD=%s'%(HOST, PORT, UID, PWD))
-    #_virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(DRIVER, HOST, PORT, UID, PWD))
+    #_virtodb = pyodbc.connect('DRIVER={VOS};HOST=%s:%d;UID=%s;PWD=%s'%(HOST, PORT, UID, PWD))
+    _virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(DRIVER, HOST, PORT, UID, PWD))
     
     def __new__(cls, *args, **kwargs):
         print "__new__"
@@ -92,6 +92,7 @@ class Xlore():
         try:
             result = results.fetchone()[0]
             if type(result) == tuple:
+                print "result is tuple"
                 result = result[0]
         except TypeError,e:
             return None
@@ -108,7 +109,10 @@ class Xlore():
         """
         cursor = Xlore._virtodb.cursor()
         try:
-            results = [r[0][0] for r in cursor.execute(sq).fetchall()]
+            results = [r[0] for r in cursor.execute(sq).fetchall()]
+            if results and len(results) > 0 and type(results[0]) == tuple:
+                print "result is tuple"
+                results = [r[0] for r in results]
         except TypeError,e:
             return []
         finally:
