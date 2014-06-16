@@ -16,14 +16,19 @@ class LinkingResource(Resource):
     def render_GET(self, request):
         request.setHeader("Access-Control-Allow-Origin","*")
         request.setHeader("Content-Type","application/json")
-        return 'get'
+        
+        return self.render_POST(request)
 
     def render_POST(self, request):
         request.setHeader("Access-Control-Allow-Origin","*")
         request.setHeader("Content-Type","application/json")
 
         args = dict((k,v[0]) for k,v in request.args.items())
+        print type(args)
         print "request args:",args
+        if not args.has_key('type') or len(args['type']) == 0:
+            args['type'] = 'query'
+            
         if args['type'] == 'abstract':
             db = MySQLDB()
             e = AbstractEL(args)

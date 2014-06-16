@@ -72,11 +72,11 @@ class AbstractEL():
 class QueryEL():
 
     def __init__(self, args):
-        self.query_str = args["query_str"]
-        self.text = args["text"]
+        self.query_str = args["query_str"] if args.has_key("query_str") else None
+        self.text = args["text"] if args.has_key("text") else None
         self.queries = [] #list of text
         self.entities = []
-        self.limit = args["limit"]
+        self.limit = args["limit"] if args.has_key("limit") else None
         self.db = None
         self.xlore = None
 

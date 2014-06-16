@@ -64,8 +64,8 @@ response: format:json:
 
 """
 
-URL = 'http://localhost:5656/linking'
-#URL = 'http://166.111.68.66:5656/linking'
+#URL = 'http://localhost:5656/linking'
+URL = 'http://166.111.68.66:5656/linking'
 #URL = 'http://10.1.1.23:5656/linking'
 
 def abstract_test():
