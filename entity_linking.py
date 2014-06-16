@@ -241,8 +241,8 @@ class TextProcesser():
         #remove the punctuation using the character deletion step of translate
         no_punctuation = lowers.translate(None, string.punctuation)
         tokens = nltk.word_tokenize(no_punctuation)
-        #from nltk.corpus import stopwords
-        #tokens = [w for w in tokens if not w in stopwords.words('english')]
+        from nltk.corpus import stopwords
+        tokens = [w for w in tokens if not w in stopwords.words('english')]
         return tokens
 
     def stem_tokens(self, tokens, stemmer):

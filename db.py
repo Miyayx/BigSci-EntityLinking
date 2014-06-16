@@ -67,7 +67,8 @@ class Xlore():
     UID  = configs["user"]
     PWD  = configs["password"]
     DRIVER = configs["driver"]
-    _virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(DRIVER, HOST, PORT, UID, PWD))
+    _virtodb = pyodbc.connect('DRIVER={VOS};HOST=%s:%d;UID=%s;PWD=%s'%(HOST, PORT, UID, PWD))
+    #_virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s')%(DRIVER, HOST, PORT, UID, PWD)
     
     def __new__(cls, *args, **kwargs):
         print "__new__"
