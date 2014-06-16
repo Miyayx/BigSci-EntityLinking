@@ -142,16 +142,19 @@ class Xlore():
         return image_urls[:n] if len(image_urls) >= 3 else image_urls
 
     def get_littleentity(self, entity_id):
-        cursor = Xlore._virtodb.cursor()
         entity = {}
         entity["uri"] = entity_id
 
-        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?title}'%entity_id
-        entity["title"] = cursor.execute(sq).fetchone()[0][0]
+        #cursor = Xlore._virtodb.cursor()
+        #sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?title}'%entity_id
+        #entity["title"] = cursor.execute(sq).fetchone()[0][0]
 
-        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/enwiki/abstract> ?object }'%entity_id
-        a = cursor.execute(sq).fetchone()
-        entity["abstract"] = a[0][0] if a else None
+        #sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/enwiki/abstract> ?object }'%entity_id
+        #a = cursor.execute(sq).fetchone()
+        #entity["abstract"] = a[0][0] if a else None
+
+        entity["title"] = self.get_title(entity_id)
+        entity["abstract"] = self.get_abstract(entity_id)
         entity["image"] = self.get_image(entity_id)
         print "entity", entity
         return entity
