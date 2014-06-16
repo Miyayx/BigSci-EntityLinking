@@ -67,8 +67,8 @@ class Xlore():
     UID  = configs["user"]
     PWD  = configs["password"]
     DRIVER = configs["driver"]
-    #_virtodb = pyodbc.connect('DRIVER={VOS};HOST=%s:%d;UID=%s;PWD=%s'%(HOST, PORT, UID, PWD))
-    _virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(DRIVER, HOST, PORT, UID, PWD))
+    _virtodb = pyodbc.connect('DRIVER={VOS};HOST=%s:%d;UID=%s;PWD=%s'%(HOST, PORT, UID, PWD))
+    #_virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(DRIVER, HOST, PORT, UID, PWD))
     
     def __new__(cls, *args, **kwargs):
         print "__new__"
@@ -90,7 +90,9 @@ class Xlore():
         cursor = Xlore._virtodb.cursor()
         results = cursor.execute(sq)
         try:
-            result = results.fetchone()[0][0]
+            result = results.fetchone()[0]
+            if type(result) == tuple:
+                result = result[0]
         except TypeError,e:
             return None
         finally:
@@ -147,6 +149,7 @@ class Xlore():
         a = cursor.execute(sq).fetchone()
         entity["abstract"] = a[0][0] if a else None
         entity["image"] = self.get_image(entity_id)
+        print "entity", entity
         return entity
 
     @staticmethod
