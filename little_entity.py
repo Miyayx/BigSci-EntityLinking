@@ -11,7 +11,7 @@ class LittleEntity():
         self.sim      = similarity
 
     def __str__(self):
-        return "title:"+str(self.title)+"#"+"uri:"+str(self.entity_uri)+"image_url:"+str(self.image_url)
+        return "title:"+str(self.title)+"#"+"uri:"+str(self.entity_uri)+"image_url:"+str(self.image)
 
 
 

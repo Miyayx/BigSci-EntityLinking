@@ -67,8 +67,8 @@ class Xlore():
     UID  = configs["user"]
     PWD  = configs["password"]
     DRIVER = configs["driver"]
-    _virtodb = pyodbc.connect('DRIVER={VOS};HOST=%s:%d;UID=%s;PWD=%s'%(HOST, PORT, UID, PWD))
-    #_virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s')%(DRIVER, HOST, PORT, UID, PWD)
+    #_virtodb = pyodbc.connect('DRIVER={VOS};HOST=%s:%d;UID=%s;PWD=%s'%(HOST, PORT, UID, PWD))
+    _virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(DRIVER, HOST, PORT, UID, PWD))
     
     def __new__(cls, *args, **kwargs):
         print "__new__"
@@ -81,16 +81,36 @@ class Xlore():
         pass
 
     def fetch_one_result(self, sq):
+        """
+        Fetch one result from xlore virtuoso database according to query the sq string
+
+        return:
+            one result(if hits) or None(if no hit)
+        """
         cursor = Xlore._virtodb.cursor()
         results = cursor.execute(sq)
-        result = results.fetchone()[0][0]
-        cursor.close()
+        try:
+            result = results.fetchone()[0][0]
+        except TypeError,e:
+            return None
+        finally:
+            cursor.close()
         return result
 
     def fetch_multi_result(self, sq):
+        """
+        Fetch multi results from xlore virtuoso database according to query the sq string
+
+        return:
+            result list(if hits) or empty list(if no hit)
+        """
         cursor = Xlore._virtodb.cursor()
-        results = [r[0][0] for r in cursor.execute(sq).fetchall()]
-        cursor.close()
+        try:
+            results = [r[0][0] for r in cursor.execute(sq).fetchall()]
+        except TypeError,e:
+            return []
+        finally:
+            cursor.close()
         return results
 
     def get_abstract(self, entity_id):

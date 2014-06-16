@@ -151,7 +151,7 @@ class Disambiguation():
         if len(self.candidates) == 1:
             return self.candidates[0]
 
-        self.similar_cal(self.t, self.candidates)
+        self.similar_cal(self.text, self.candidates)
 
         import operator
         if num <= 1 or not num:
@@ -165,6 +165,7 @@ class Disambiguation():
         print "candiates:",candidates
         #URI2Abstract = loadURIToAbstract(candidates)
         for c in candidates:
+            print c
             a = Xlore().get_abstract(c)
             if a:
                 print c,"has abstract"
@@ -339,44 +340,44 @@ if __name__=="__main__":
     import datetime
 
     #################### Abstract Test #####################33
-    ##loadCandidateSet()
-    #loadEntity2URI()
-    ##loadURI2Entity()
-    ##loadEntityToAbstract()
-    #db = MySQLDB()
-    #with open("new_abstract.txt","w") as f:
-    #    for a in loadAbstract():
-    #        param = {}
-    #        param['type'] = 'abstract'
-    #        param['paper_id'] = 0
-    #        param['limit'] = 0
-    #        param['text'] = a
-    #        param['t'] = datetime.datetime.now()
-    #        e = AbstractEL(param)
-    #        e.set_db(db)
-    #       
-    #        f.write(e.text+"\n\n")
-    #        e.run()
-    #        for q in e.queries:
-    #            f.write(str(q))
-    #        f.write("\n")
+    #loadCandidateSet()
+    loadEntity2URI()
+    #loadURI2Entity()
+    #loadEntityToAbstract()
+    db = MySQLDB()
+    with open("new_abstract.txt","w") as f:
+        for a in loadAbstract():
+            param = {}
+            param['type'] = 'abstract'
+            param['paper_id'] = 0
+            param['limit'] = 0
+            param['text'] = a
+            param['t'] = datetime.datetime.now()
+            e = AbstractEL(param)
+            e.set_db(db)
+           
+            f.write(e.text+"\n\n")
+            e.run()
+            for q in e.queries:
+                f.write(str(q))
+            f.write("\n")
 
     #################### Query Test #####################33
-    db = MySQLDB()
-    xlore = Xlore()
-    l = ["machine learning","Japan","China","Beijing","Italy"]
-    for i in l:
-        param = {}
-        param['type']  = 'query'
-        param['limit'] = 0
-        param['text']  = ""
-        param['t']     = datetime.datetime.now()
-        param['query_str'] = i
-        e = QueryEL(param)
-        e.set_db(db)
-        e.set_xlore(xlore)
-        e.run()
+    #db = MySQLDB()
+    #xlore = Xlore()
+    #l = ["machine learning","Japan","China","Beijing","Italy"]
+    #for i in l:
+    #    param = {}
+    #    param['type']  = 'query'
+    #    param['limit'] = 0
+    #    param['text']  = ""
+    #    param['t']     = datetime.datetime.now()
+    #    param['query_str'] = i
+    #    e = QueryEL(param)
+    #    e.set_db(db)
+    #    e.set_xlore(xlore)
+    #    e.run()
 
-        for entity in e.entities:
-            print entity
+    #    for entity in e.entities:
+    #        print entity
 
