@@ -1,0 +1,1 @@
+0,30 0-23 * * * /usr/bin/python /home/lmy/BigSci-EntityLinking/webserver.py
