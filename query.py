@@ -8,7 +8,9 @@ class Query():
         self.start = start
         self.end = end
 
-        self.entity_id = 0
+        self.entity_id  = 0
+        self.entity_uri = ""
+        self.entity_url = ""
         self.similarity = 0
 
     def __str__(self):

@@ -11,6 +11,8 @@ from entity_linking import AbstractEL
 from entity_linking import QueryEL
 from db import *
 
+PREFIX = "http://keg.cs.tsinghua.edu.cn/instance/"
+
 class LinkingResource(Resource):
 
     def render_GET(self, request):
@@ -62,16 +64,21 @@ class LinkingResource(Resource):
         query["query"] = q.text
         query["start"] = q.start
         query["end"]   = q.end
-        query["entity_uri"] = q.entity_id
+        query["entity_id"]  = q.entity_id
+        query["entity_uri"] = q.entity_uri
+        query["entity_url"] = q.entity_url
         query["similar"] = q.similarity 
         return query
 
     def parse_query_result(self, e ):
         entity = {}
-        entity["title"] = e.title
-        entity["abstract"] = e.abstract
-        entity["image"]    = e.image
-        entity["sim"]      = e.sim 
+        entity["entity_id"] = e._id
+        entity["uri"]       = e.uri
+        entity["url"]       = e.url
+        entity["title"]     = e.title
+        entity["abstract"]  = e.abstract
+        entity["image"]     = e.image
+        entity["sim"]       = e.sim 
         return entity
 
 if __name__=="__main__":
@@ -80,7 +87,7 @@ if __name__=="__main__":
 
     from twisted.internet import reactor
 
-    reactor.listenTCP(5656, server.Site(root))
+    reactor.listenTCP(5655, server.Site(root))
     reactor.run()
 
 

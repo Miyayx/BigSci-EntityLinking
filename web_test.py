@@ -37,7 +37,9 @@ response: format:json:
                 query     : entity mention,
                 start     : start index
                 end       : end index
-                entity_uri:
+                entity_id : entity id  in Xlore
+                entity_uri: entity uri in XLore
+                entity_url: entity url in XLore
                 similarity: value of similarity
             },
             {
@@ -52,6 +54,9 @@ response: format:json:
         t         : time           ,处理时间
         entity:[
             {
+                entity_id : entity id in Xlore
+                uri       : entity uri in Xlore
+                url       : entity url in XLore
                 title     : entity title,         
                 abstract  : entity abstract,
                 image     : urls of entity picture, 可以返回多个图片地址
@@ -64,8 +69,8 @@ response: format:json:
 
 """
 
-#URL = 'http://localhost:5656/linking'
-URL = 'http://166.111.68.66:5656/linking'
+URL = 'http://localhost:5655/linking'
+#URL = 'http://166.111.68.66:5656/linking'
 #URL = 'http://10.1.1.23:5656/linking'
 
 def abstract_test():
@@ -75,7 +80,7 @@ def abstract_test():
     param['limit'] = 0
 
     count = 20
-    for line in open("../../data/abstract.txt"):
+    for line in open("data/abstract.txt"):
         if count < 0:
             break
         a = line.strip("\n").strip("\r")
@@ -104,6 +109,6 @@ def query_test(q):
     print resp
 
 if __name__=="__main__":
-    #abstract_test()
-    for q in ['machine learning','data structure','data mining']:
-        query_test(q)
+    abstract_test()
+    #for q in ['machine learning','data structure','data mining']:
+    #    query_test(q)

@@ -11,6 +11,9 @@ from term_extraction import TermExtractor
 from db import *
 from little_entity import LittleEntity
 
+PREFIX = "http://keg.cs.tsinghua.edu.cn/instance/"
+XLORE_URL_PREFIX="http://xlore.org/sigInfo.action?uri="
+
 class AbstractEL():
     
     def __init__(self, args):
@@ -50,6 +53,8 @@ class AbstractEL():
             candidates = self.db.get_candidateset(q.text)
             if candidates:
                 q.entity_id = Disambiguation(self.text, candidates ).get_best()
+                q.entity_uri = PREFIX+q.entity_id
+                q.entity_url = XLORE_URL_PREFIX+q.entity_uri
             else:
                 self.queries.remove(q)
 

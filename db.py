@@ -10,6 +10,10 @@ from urllib import quote
 
 from utils import *
 
+XLORE_URL="http://xlore.org/sigInfo.action"
+XLORE_URL_PREFIX="http://xlore.org/sigInfo.action?uri="
+PREFIX = "http://keg.cs.tsinghua.edu.cn/instance/"
+
 class MySQLDB():
 
     def __init__(self):
@@ -30,6 +34,20 @@ class MySQLDB():
     def get_candidateset(self, mention):
         cur = self.conn.cursor()
         cur.execute('SELECT entity FROM '+self.table+' WHERE mention = "'+mention+'"')
+        result = cur.fetchall()
+        cur.close()
+        if result:
+            result = [r[0][r[0].index('<')+1:r[0].index('>')] for r in result]
+            return result
+        else:
+            return None
+
+    def get_fuzzy_candidateset(self, mention):
+        """
+        untested
+        """
+        cur = self.conn.cursor()
+        cur.execute('SELECT entity FROM '+self.table+' WHERE mention = "%'+mention+'%"')
         result = cur.fetchall()
         cur.close()
         if result:
@@ -143,7 +161,9 @@ class Xlore():
 
     def get_littleentity(self, entity_id):
         entity = {}
-        entity["uri"] = entity_id
+        entity["_id"] = entity_id
+        entity["uri"] = PREFIX+entity_id
+        entity["url"] = XLORE_URL_PREFIX+PREFIX+entity_id
 
         #cursor = Xlore._virtodb.cursor()
         #sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?title}'%entity_id
