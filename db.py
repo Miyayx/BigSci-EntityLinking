@@ -40,7 +40,7 @@ class MySQLDB():
             result = [r[0][r[0].index('<')+1:r[0].index('>')] for r in result]
             return result
         else:
-            return None
+            return []
 
     def get_fuzzy_candidateset(self, mention):
         """

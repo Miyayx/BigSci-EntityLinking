@@ -107,9 +107,58 @@ def query_test(q):
     f = urllib2.urlopen(URL, urllib.urlencode(param))
     #f = urllib2.urlopen(URL)
     resp = f.read()
-    print resp
+    return resp
+
+def querylog_test(logfn):
+    import time
+    import json
+    times = []
+    count = 0
+    hit = 0
+    min_time = 100000000
+    max_time = 0
+    result_file = open("./data/querylog_test_hit_result.dat","w")
+    for keyword in open(logfn):
+        count += 1
+        keyword = keyword.strip("\n")
+        keyword = keyword.replace('"','')
+        try:
+            start = time.time()
+            r = query_test(keyword)
+
+            # if hit
+            j = json.loads(r)
+            if len(j["entity"]) > 0:
+                hit += 1
+                print keyword
+                print r
+                result_file.write(keyword+"\n")
+                result_file.write(r+"\n")
+                result_file.write("\n")
+
+            duration = time.time()-start
+            print "Time:",duration
+            if duration < min_time:
+                min_time = duration
+            if duration > max_time:
+                max_time = duration
+
+            times.append(duration)
+        except:
+            print "Error, keyword:",keyword
+
+    result_file.close()
+
+    print "Avg time:", sum(times)/len(times)
+    print "Max time:", max_time
+    print "Min time:", min_time
+    print "Hit:",hit
+    print "Hit Ratio:",(hit*1.0)/count
 
 if __name__=="__main__":
     #abstract_test()
-    for q in ['machine learning','data structure','data mining','Computer architecture']:
-        query_test(q)
+
+    querylog_test("./data/query_keywords.dat")
+
+    #for q in ['machine learning','data structure','data mining','Computer architecture']:
+    #    print query_test(q)
