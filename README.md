@@ -31,7 +31,7 @@ keg@Tsinghua
 
 Setting：
 
-#Third-party package
+##Third-party package
 * nltk 
 
         pip install nltk
@@ -46,7 +46,7 @@ Setting：
 
         pip install twisted
 
-#Others
+##Others
 * Fedora
 
         yum install wine
@@ -55,7 +55,7 @@ Setting：
 
         apt-get install wine
 
-#Server Start Step
+##Server Start Step
 1. start term extractor
 
            wine termextracttools.exe   in term/bin/
@@ -65,5 +65,5 @@ Setting：
 
            python webserver.py  in BigSci-EntityLinking/
 
-#Test Demo
+##Test Demo
     python web_test.py
