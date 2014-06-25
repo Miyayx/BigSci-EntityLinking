@@ -122,30 +122,32 @@ def querylog_test(logfn):
         count += 1
         keyword = keyword.strip("\n")
         keyword = keyword.replace('"','')
+        start = time.time()
         try:
-            start = time.time()
             r = query_test(keyword)
-
-            # if hit
-            j = json.loads(r)
-            if len(j["entity"]) > 0:
-                hit += 1
-                print keyword
-                print r
-                result_file.write(keyword+"\n")
-                result_file.write(r+"\n")
-                result_file.write("\n")
-
-            duration = time.time()-start
-            print "Time:",duration
-            if duration < min_time:
-                min_time = duration
-            if duration > max_time:
-                max_time = duration
-
-            times.append(duration)
-        except:
+        except Exception,e:
             print "Error, keyword:",keyword
+            print e
+            continue
+
+        # if hit
+        j = json.loads(r)
+        if len(j["entity"]) > 0:
+            hit += 1
+            print keyword
+            print r
+            result_file.write(keyword+"\n")
+            result_file.write(r+"\n")
+            result_file.write("\n")
+
+        duration = time.time()-start
+        print "Time:",duration
+        if duration < min_time:
+            min_time = duration
+        if duration > max_time:
+            max_time = duration
+
+        times.append(duration)
 
     result_file.close()
 
