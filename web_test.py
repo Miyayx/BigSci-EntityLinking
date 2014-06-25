@@ -20,6 +20,7 @@ request:
     query:
     {
         type     : "query", 填"query"
+        lan      : "en" or "ch" or "all"(==None)
         query_str: query string,查询字符串
         text     : context of query，查询上下文（暂不考虑）
         limit    : the max num of related entities,返回的entity数量
@@ -57,8 +58,8 @@ response: format:json:
                 entity_id : entity id in Xlore
                 uri       : entity uri in Xlore
                 url       : entity url in XLore
-                title     : entity title,         
-                abstract  : entity abstract,
+                title     : entity title,     {"en":"","ch",""}    
+                abstract  : entity abstract,  {"en":"","ch":""}
                 image     : urls of entity picture, 可以返回多个图片地址
                 sim       : value of similarity
             },{
@@ -109,6 +110,6 @@ def query_test(q):
     print resp
 
 if __name__=="__main__":
-    abstract_test()
-    #for q in ['machine learning','data structure','data mining']:
-    #    query_test(q)
+    #abstract_test()
+    for q in ['machine learning','data structure','data mining','Computer architecture']:
+        query_test(q)

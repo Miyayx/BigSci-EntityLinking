@@ -137,17 +137,68 @@ class Xlore():
             cursor.close()
         return results
 
-    def get_abstract(self, entity_id):
+    def get_abstract(self, entity_id, lan="en"):
+        if lan == "en":
+            return {"en":self.get_en_abstract(entity_id)}
+        if lan == "ch":
+            return {"ch":self.get_ch_abstract(entity_id)}
+        if lan == "all":
+            return {"en":self.get_en_abstract(entity_id),"ch":self.get_ch_abstract(entity_id)}
+
+    def get_en_abstract(self, entity_id):
         sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/enwiki/abstract> ?object }'%entity_id
         return self.fetch_one_result(sq)
 
-    def get_title(self, entity_id):
+    def get_ch_abstract(self, entity_id):
+        ch_baike = ["zhwiki", "baidu", "hudong"]
+        for ch in ch_baike:
+            sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/abstract> ?title}'%(entity_id,ch)
+            result = self.fetch_one_result(sq)
+            if result:
+                return result
+        return None
+
+    def get_title(self, entity_id, lan="en"):
+        if lan == "en":
+            return {"en":self.get_en_title(entity_id)}
+        if lan == "ch":
+            return {"ch":self.get_ch_title(entity_id)}
+        if lan == "all":
+            return {"en":self.get_en_title(entity_id),"ch":self.get_ch_title(entity_id)}
+
+    def get_en_title(self, entity_id):
         sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?title}'%entity_id
         return self.fetch_one_result(sq)
 
-    def get_fulltext(self, entity_id):
-        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/fulltext> ?e}'%entity_id
+    def get_ch_title(self, entity_id):
+        ch_baike = ["zhwiki", "baidu", "hudong"]
+        for ch in ch_baike:
+            sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/label> ?title}'%(entity_id,ch)
+            result = self.fetch_one_result(sq)
+            if result:
+                return result
+        return None
+
+    def get_fulltext(self, entity_id, lan="en"):
+        if lan == "en":
+            return {"en":self.get_en_fulltext(entity_id)}
+        if lan == "ch":
+            return {"ch":self.get_ch_fulltext(entity_id)}
+        if lan == "all":
+            return {"en":self.get_en_fulltext(entity_id),"ch":self.get_ch_fulltext(entity_id)}
+
+    def get_en_fulltext(self, entity_id):
+        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/enwiki/fulltext> ?object }'%entity_id
         return self.fetch_one_result(sq)
+
+    def get_ch_fulltext(self, entity_id):
+        ch_baike = ["zhwiki", "baidu", "hudong"]
+        for ch in ch_baike:
+            sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/fulltext> ?e}'%(entity_id,ch)
+            result = self.fetch_one_result(sq)
+            if result:
+                return result
+        return None
 
     def get_image(self, entity_id, n = 3):
         image_urls = []
@@ -159,7 +210,7 @@ class Xlore():
                 break
         return image_urls[:n] if len(image_urls) >= 3 else image_urls
 
-    def get_littleentity(self, entity_id):
+    def get_littleentity(self, entity_id, lan):
         entity = {}
         entity["_id"] = entity_id
         entity["uri"] = PREFIX+entity_id
@@ -173,8 +224,8 @@ class Xlore():
         #a = cursor.execute(sq).fetchone()
         #entity["abstract"] = a[0][0] if a else None
 
-        entity["title"] = self.get_title(entity_id)
-        entity["abstract"] = self.get_abstract(entity_id)
+        entity["title"] = self.get_title(entity_id, lan)
+        entity["abstract"] = self.get_abstract(entity_id, lan)
         entity["image"] = self.get_image(entity_id)
         print "entity", entity
         return entity

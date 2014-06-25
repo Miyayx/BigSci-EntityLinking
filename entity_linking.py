@@ -79,6 +79,16 @@ class QueryEL():
     def __init__(self, args):
         self.query_str = args["query_str"] if args.has_key("query_str") else None
         self.text = args["text"] if args.has_key("text") else None
+        if args.has_key("lan"):
+            if args["lan"] == "en":
+                self.lan = "en"
+            elif args["lan"] == "ch":
+                self.lan = "ch"
+            else:
+                self.lan = "all"
+        else:
+            self.lan = "all"
+
         self.queries = [] #list of text
         self.entities = []
         self.limit = args["limit"] if args.has_key("limit") else None
@@ -119,7 +129,7 @@ class QueryEL():
                 #if no session context, return the most similar title entity
                 es = Disambiguation(self.query_str, candidates).get_best_use_title(3)
             for e in es:
-                le = self.xlore.get_littleentity(e)
+                le = self.xlore.get_littleentity(e, self.lan)
                 self.entities.append(LittleEntity(**le))
 
 class Disambiguation():
@@ -140,7 +150,7 @@ class Disambiguation():
             return self.candidates[0]
 
         for c in self.candidates:
-            t = Xlore().get_title(c)
+            t = Xlore().get_en_title(c)
             self.c_sim[c] = Distance.levenshtein(self.text, t)
 
         import operator
