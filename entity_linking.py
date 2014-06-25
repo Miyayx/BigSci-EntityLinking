@@ -6,10 +6,10 @@ import string
 
 from collections import Counter
 
-from query import Query
+from model.query import Query
+from model.little_entity import LittleEntity
 from term_extraction import TermExtractor
 from db import *
-from little_entity import LittleEntity
 
 PREFIX = "http://keg.cs.tsinghua.edu.cn/instance/"
 XLORE_URL_PREFIX="http://xlore.org/sigInfo.action?uri="
