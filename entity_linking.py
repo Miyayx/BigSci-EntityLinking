@@ -96,8 +96,8 @@ class QueryEL():
         self.xlore = None
 
     def run(self):
-        #self.extract_mentions()
-        self.queries.append(Query(self.query_str, 0, 0))
+        self.extract_mentions()
+        #self.queries.append(Query(self.query_str, 0, 0))
         self.get_entity()
 
     def set_db(self, db):
@@ -107,14 +107,24 @@ class QueryEL():
         self.xlore = x
 
     def extract_mentions(self):
-        mentions = db.get_mentions()
-        for m in mentions:
-            d = Distance.levenshtein(self.query_str, m)
-            if d < 10:
-                q = Query(m, 0, 0)
-                self.queries.append(q)
+        #mentions = db.get_mentions()
+        #for m in mentions:
+        #    d = Distance.levenshtein(self.query_str, m)
+        #    if d < 10:
+        #        q = Query(m, 0, 0)
+        #        self.queries.append(q)
 
-        print "Find %d mentions"%len(self.queries)
+        #print "Find %d mentions"%len(self.queries)
+        te = TermExtractor()
+        terms = te.get_terms(1, self.query_str)
+        if len(terms) == 0:
+            self.queries.append(Query(self.query_str, 0, 0))
+        else:
+            for t in terms:
+                q = Query(t.lower(), 0, 0)
+                self.queries.append(q)
+            
+        print "%d mentions"%len(self.queries)
 
     def get_entity(self):
         candidates = []

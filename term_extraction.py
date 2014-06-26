@@ -37,13 +37,15 @@ class TermExtractor:
         return terms
 
 if __name__=="__main__":
-    i = 0
-    for s in open("../../data/abstract.txt"):
-        s = s.strip("\n")
-        if i > 5:
-            break
-        te = TermExtractor()
-        te.get_terms(1,s)
+    #i = 0
+    #for s in open("../../data/abstract.txt"):
+    #    s = s.strip("\n")
+    #    if i > 5:
+    #        break
+    #    te = TermExtractor()
+    #    te.get_terms(1,s)
 
-        i += 1
+    #    i += 1
+    te = TermExtractor()
+    te.get_terms(1,"John")
 
