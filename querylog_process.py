@@ -22,10 +22,31 @@ def querylog_staticstic(fn):
 def staticstic(fn):
     pass
 
-#types = [line.split("\t")[4] for line in open("../../zjt/querylog/querylog2012.txt")]
-#for t in set(types):
-#    print t
 
+def search_keyword_statistics(fn):
+    confs = [line.strip("\n").upper() for line in open("data/conference.dat")]
+    conf_count = 0
+    import nltk
+    for k in open(fn):
+        k = k.strip("\n")
+        if len(k.split())==1:
+            #if len(k) > 2 and len(k) < 7 and k.isupper():
+            if k.upper() in confs: 
+                print "Coference",k
+                conf_count += 1
+                continue
+        text = nltk.word_tokenize(k)
+        tags = [tag for word, tag in nltk.pos_tag(text)]
+        nnp = tags.count('NNP')
+        nn = tags.count('NN')
+        #if nnp+nn == len(tags) and len(k) < 15:
+        #    print "Name",k
+        #elif len(tags) > 3:
+        #    print "Paper",k
+    print "Conf Count:",conf_count
+
+        
+        
 from utils import *
 import MySQLdb
 
@@ -73,9 +94,12 @@ class QueryLogDB():
 
 if __name__=="__main__":
     #search_info("../../zjt/querylog/querylog2012.txt","data/query_keywords.dat")
-    querylog = QueryLogDB()
-    types = querylog.get_types()
-    print types
-    print querylog.count_type(types[1])
-    write_lines("./data/query_keywords.dat",querylog.get_keyword_from_type(types[1]))
+    #querylog = QueryLogDB()
+    #types = querylog.get_types()
+    #print types
+    #for t in types:
+    #    print t,querylog.count_type(t)
+    #write_lines("./data/query_keywords.dat",querylog.get_keyword_from_type(types[1]))
+
+    search_keyword_statistics("./data/query_keywords.dat")
 

@@ -34,6 +34,7 @@ Setting：
 ##Third-party package
 * nltk 
 
+        pip install numpy
         pip install nltk
 
 > need nltk.download() to download nltk corpas
