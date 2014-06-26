@@ -22,6 +22,20 @@ def querylog_staticstic(fn):
 def staticstic(fn):
     pass
 
+def hit_keyword(fn):
+    keywords = []
+    f = open(fn)
+    while True:
+        line = f.readline()
+        if not line:
+            break
+        keywords.append(line.strip("\n"))
+        line = f.readline()
+        line = f.readline()
+    from utils import write_lines
+    write_lines("./data/query_hit_keyword.dat",keywords)
+    f.close()
+
 
 def search_keyword_statistics(fn):
     confs = [line.strip("\n").upper() for line in open("data/conference.dat")]
@@ -101,5 +115,7 @@ if __name__=="__main__":
     #    print t,querylog.count_type(t)
     #write_lines("./data/query_keywords.dat",querylog.get_keyword_from_type(types[1]))
 
-    search_keyword_statistics("./data/query_keywords.dat")
+    #search_keyword_statistics("./data/query_keywords.dat")
+    hit_keyword("./data/querylog_test_hit_result.dat")
+    
 
