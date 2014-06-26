@@ -123,7 +123,8 @@ class QueryEL():
             candidates += self.db.get_candidateset(q.text)
         print "length of candidates",len(candidates)
         if candidates:
-            if self.text:
+            print candidates
+            if self.text and len(self.text) > 0:
                 es = Disambiguation(self.text, candidates ).get_best()
             else:
                 #if no session context, return the most similar title entity
@@ -147,7 +148,8 @@ class Disambiguation():
         """
 
         if len(self.candidates) == 1:
-            return self.candidates[0]
+            print "Has only one candidates "
+            return self.candidates
 
         for c in self.candidates:
             t = Xlore().get_en_title(c)
