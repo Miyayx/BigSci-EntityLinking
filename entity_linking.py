@@ -152,6 +152,13 @@ class Disambiguation():
         self.threshold = 0.9
         #self.similar_cal(t, candidates)
 
+    def domain_constrain(self):
+        new_can = []
+        for c in self.candidates:
+            if c in domain:
+                new_can.append(c)
+        self.candidates = new_can
+
     def get_best_use_title(self, num = 0):
         """
         Calculate the edit distance between two titles and get the most similar ones
@@ -160,6 +167,8 @@ class Disambiguation():
         if len(self.candidates) == 1:
             print "Has only one candidates "
             return self.candidates
+
+        #self.domain_constrain()
 
         for c in self.candidates:
             t = Xlore().get_en_title(c)
