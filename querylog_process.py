@@ -105,6 +105,50 @@ class QueryLogDB():
         keywords = [r[0] for r in result]
         return set(keywords)
 
+class ArnetDB():
+
+    def __init__(self):
+        configs = ConfigTool.parse_config("db.cfg","QueryLog")
+        print "configs:",configs
+        self.host   = configs["host"]
+        self.port   = int(configs["port"])
+        self.user   = configs["user"]
+        self.passwd = configs["password"]
+        self.db     = 'arnet_db'
+        #self.table  = 'logrecord_2012'
+        self.conn   = None
+        try:
+            self.conn=MySQLdb.connect(host=self.host, user=self.user, passwd=self.passwd,db=self.db,port=self.port)
+        except MySQLdb.Error, e:
+            print "Mysql Error %d: %s" % (e.args[0], e.args[1])
+
+    def get_popular_auther_id(self):
+        cur = self.conn.cursor()
+        cur.execute('SELECT aid,COUNT(pid) FROM arnet_db.na_author2pub GROUP BY aid;')
+        print "get result"
+        result = cur.fetchall()
+        cur.close()
+
+        result = dict(result)
+        print "sort"
+        result = sorted(result.iteritems(), key=lambda d:d[0], reverse = True)
+
+        return [r[0] for r in result[:100]]
+
+    def get_author_intetest(self, aid):
+        cur = self.conn.cursor()
+        cur.execute('SELECT interest FROM arnet_db.person_interest WHERE aid=%d;'%aid)
+        result = cur.fetchall()
+        cur.close()
+
+        interest = set()
+        for r in result:
+            r = r[0]
+            ins = r.split(",")
+            interest.update(ins)
+
+        return list(interest)
+
 
 if __name__=="__main__":
     #search_info("../../zjt/querylog/querylog2012.txt","data/query_keywords.dat")
@@ -116,6 +160,9 @@ if __name__=="__main__":
     #write_lines("./data/query_keywords.dat",querylog.get_keyword_from_type(types[1]))
 
     #search_keyword_statistics("./data/query_keywords.dat")
-    hit_keyword("./data/querylog_test_hit_result.dat")
+    #hit_keyword("./data/querylog_test_hit_result.dat")
+
+    adb = ArnetDB()
+    print adb.get_popular_auther_id()
     
 
