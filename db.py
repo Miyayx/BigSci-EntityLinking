@@ -24,7 +24,7 @@ class MySQLDB():
         self.user   = configs["user"]
         self.passwd = configs["password"]
         self.db     = 'entity_linking'
-        self.table  = 'mention2entities'
+        self.table  = 'mention_entity_count'
         self.conn   = None
         try:
             self.conn=MySQLdb.connect(host=self.host, user=self.user, passwd=self.passwd,db=self.db,port=self.port)
