@@ -217,7 +217,7 @@ class Xlore():
 
     def get_image(self, entity_id, n = 3):
         image_urls = []
-        lore = ["enwiki","baidu","hudong","zhwiki"]
+        lore = ["enwiki","hudong","zhwiki"]
         for l in lore:
             sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/image> ?img }'%(entity_id, l)
             image_urls += self.fetch_multi_result(sq)
