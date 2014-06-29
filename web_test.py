@@ -70,9 +70,9 @@ response: format:json:
 
 """
 
-#URL = 'http://localhost:5655/linking'
+URL = 'http://localhost:5655/linking'
 #URL = 'http://166.111.68.66:5656/linking'
-URL = 'http://10.1.1.23:5656/linking'
+#URL = 'http://10.1.1.23:5656/linking'
 
 def abstract_test():
     param = {}
@@ -109,7 +109,7 @@ def query_test(q):
     resp = f.read()
     return resp
 
-def querylog_test(logfn):
+def querylog_test(logfn, hitfile=None, statisfile=None):
     import time
     import json
     times = []
@@ -117,10 +117,17 @@ def querylog_test(logfn):
     hit = 0
     min_time = 100000000
     max_time = 0
-    result_file = open("./data/querylog_test_hit_result.dat","w")
+    ch = 0
+    en = 0
+    not_hit = []
+    if hitfile:
+        hitf = open(hitfile,"w")
+    if statisfile:
+        statisf = open(statisfile,"w")
+    #result_file = open("./data/querylog_test_hit_result.dat","w")
     for keyword in open(logfn):
         count += 1
-        keyword = keyword.strip("\n")
+        keyword = keyword.strip("\n").strip("\r")
         keyword = keyword.replace('"','')
         start = time.time()
         try:
@@ -136,9 +143,24 @@ def querylog_test(logfn):
             hit += 1
             print keyword
             print r
-            result_file.write(keyword+"\n")
-            result_file.write(r+"\n")
-            result_file.write("\n")
+            hitf.write(keyword+"\t")
+            hitf.write("Hit\t")
+            try:
+                hitf.write(j["entity"][0]["title"]["en"]+"\t")
+            except:
+                print  j["entity"][0]["title"]["en"]
+            hitf.write(j["entity"][0]["url"]+"\n")
+    #        result_file.write(keyword+"\n")
+    #        result_file.write(r+"\n")
+    #        result_file.write("\n")
+            if not j["entity"][0]["title"]["en"] == "null":
+                en += 1
+            if not j["entity"][0]["title"]["ch"] == "null":
+                ch += 1
+        else:
+            hitf.write(keyword+"\t")
+            hitf.write("NOT Hit\n")
+            not_hit.append(keyword)
 
         duration = time.time()-start
         print "Time:",duration
@@ -149,18 +171,43 @@ def querylog_test(logfn):
 
         times.append(duration)
 
-    result_file.close()
+    #result_file.close()
+    hitf.close()
 
     print "Avg time:", sum(times)/len(times)
     print "Max time:", max_time
     print "Min time:", min_time
     print "Hit:",hit
-    print "Hit Ratio:",(hit*1.0)/count
+    ratio = (hit*1.0)/count
+    print "Hit Ratio:",ratio
+
+    if statisf:
+        statisf.write("Total: "+str(count))
+        statisf.write("Hit: "+str(hit))
+        statisf.write("Hit Ratio: "+str(ratio))
+        statisf.write("Has En title:"+str(en))
+        statisf.write("Has Ch title:"+str(ch))
+        statisf.write("Avg time: "+ str(sum(times)/len(times)))
+        statisf.write("Max time: "+str(max_time))
+        statisf.write("Min time: "+str(min_time))
+        statisf.write("Hot Hit List:"+"\n")
+        statisf.write(str(not_hit))
+        statisf.close()
+
+    return hit,ratio
 
 if __name__=="__main__":
     #abstract_test()
 
-    querylog_test("./data/query_keywords.dat")
+    #querylog_test("./data/query_keywords.dat")
+    #querylog_test("./data/results/mention/Ner/1016.page")
+    #querylog_test("./data/all_interest.dat")
+    #querylog_test("./data/interest.dat","./test/interest_hit.csv","./test/interest_statis.dat");
+    #querylog_test("./data/author_100.dat","./test/author_100_hit.csv","./test/author_100_statis.dat");
+
+    querylog_test("./data/arnet_interest.dat","./test/interest_hit.csv","./test/interest_stat.dat");
+    querylog_test("./data/arnet_author.dat","./test/author_hit.csv","./test/author_stat.dat");
 
     #for q in ['machine learning','data structure','data mining','Computer architecture']:
+    #for q in ['data mining and machine learning',]:
     #    print query_test(q)
