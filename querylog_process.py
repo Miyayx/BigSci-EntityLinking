@@ -123,19 +123,26 @@ class ArnetDB():
             print "Mysql Error %d: %s" % (e.args[0], e.args[1])
 
     def get_popular_auther_id(self):
+        print "popular_auther_id"
         cur = self.conn.cursor()
-        cur.execute('SELECT aid,COUNT(pid) FROM arnet_db.na_author2pub GROUP BY aid;')
-        print "get result"
-        result = cur.fetchall()
+        #cur.execute('SELECT aid,COUNT(pid) FROM arnet_db.na_author2pub GROUP BY aid;')
+        cur.execute('SELECT aid,pid FROM arnet_db.na_author2pub ;')
+        result = cur.fetchone()
+        a_pc = dict()
+        while result:
+            a = result[0]
+            #a_pc[a] = result[1]
+            a_pc[a] = a_pc.get(a,0)+1
+            result = cur.fetchone()
+
         cur.close()
 
-        result = dict(result)
         print "sort"
-        result = sorted(result.iteritems(), key=lambda d:d[0], reverse = True)
+        a_pc = sorted(a_pc.iteritems(), key=lambda d:d[1], reverse = True)
 
-        return [r[0] for r in result[:100]]
+        return [r[0] for r in a_pc[:100]]
 
-    def get_author_intetest(self, aid):
+    def get_author_interest(self, aid):
         cur = self.conn.cursor()
         cur.execute('SELECT interest FROM arnet_db.person_interest WHERE aid=%d;'%aid)
         result = cur.fetchall()
@@ -146,6 +153,32 @@ class ArnetDB():
             r = r[0]
             ins = r.split(",")
             interest.update(ins)
+
+        print len(interest)
+
+        return list(interest)
+
+    def get_author_name(self, aid):
+        cur = self.conn.cursor()
+        cur.execute('SELECT names FROM arnet_db.na_person WHERE id=%d;'%aid)
+        result = cur.fetchone()
+        cur.close()
+
+        return result[0]
+
+    def get_all_interest(self):
+        cur = self.conn.cursor()
+        cur.execute('SELECT interest FROM arnet_db.person_interest')
+        result = cur.fetchone()
+        interest = set()
+        while result:
+            r = result[0]
+            ins = r.split(",")
+            interest.update(ins)
+            result = cur.fetchone()
+
+        cur.close()
+        print len(interest)
 
         return list(interest)
 
@@ -162,7 +195,24 @@ if __name__=="__main__":
     #search_keyword_statistics("./data/query_keywords.dat")
     #hit_keyword("./data/querylog_test_hit_result.dat")
 
+    f1 = open("./data/author_100.dat","w")
+    f2 = open("./data/interest.dat","w")
     adb = ArnetDB()
-    print adb.get_popular_auther_id()
+    ins = set()
+    for aid in adb.get_popular_auther_id():
+        for a in adb.get_author_name(aid).split(","):
+            f1.write(a+"\n")
+        ins.update(adb.get_author_interest(aid))
+
+    for i in ins:
+        f2.write(i+"\n")
+
+    f1.close()
+    f2.close()
+
+    #f = open("./data/all_intetest.dat","w")
+    #for i in adb.get_all_intetest():
+    #    f.write(i+"\n")
+    #f.close()
     
 
