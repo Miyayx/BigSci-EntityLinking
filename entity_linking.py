@@ -97,15 +97,20 @@ class QueryEL():
         self.xlore = None
 
     def run(self):
-        self.extract_mentions()
-        #self.queries.append(Query(self.query_str, 0, 0))
+        self.queries.append(Query(self.query_str, 0, 0))
         self.get_entity()
+        if self.no_entity() and len(self.query_str) > 20:
+            self.extract_mentions()
+            self.get_entity()
 
     def set_db(self, db):
         self.db = db
 
     def set_xlore(self, x):
         self.xlore = x
+
+    def no_entity(self):
+        return True if len(self.entities) == 0 else False
 
     def extract_mentions(self):
         #mentions = db.get_mentions()
@@ -139,7 +144,7 @@ class QueryEL():
                 es = Disambiguation(self.query_str, self.text, candidates ).get_best()
             else:
                 #if no session context, return the most similar title entity
-                es = Disambiguation(self.query_str, self.query_str, candidates).get_best_use_title(3)
+                es = Disambiguation(self.query_str, self.query_str, candidates).get_best_use_freq(3)
             for e in es:
                 le = self.xlore.get_littleentity(e, self.lan)
                 self.entities.append(LittleEntity(**le))

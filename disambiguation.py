@@ -30,6 +30,24 @@ class Disambiguation():
                 new_can.append(c)
         self.candidates = new_can
 
+    def get_best_use_freq(self, num = 0):
+        """
+        Choose the most hit one 
+        """
+
+        if len(self.candidates) == 1:
+            print "Has only one candidates"
+            return self.candidates
+
+        can_count = MySQLDB().get_candidate_and_count(self.mention)
+        for k,v in can_count:
+            print k,v
+        c_c = sorted(can_count.iteritems(), key=lambda d:d[1], reverse = True)
+        if num <= 1 or not num:
+            return c_c[0][0]
+        else:
+            return [c[0] for c in c_c][:num]
+
     def get_best_use_title(self, num = 0):
         """
         Calculate the edit distance between two titles and get the most similar ones
@@ -56,7 +74,7 @@ class Disambiguation():
     def get_best(self, num = 0):
         #candidates = Candidateset[q.text]
         if len(self.candidates) == 1:
-            return self.candidates[0]
+            return self.candidates
 
         self.similar_cal(self.doc, self.candidates)
 

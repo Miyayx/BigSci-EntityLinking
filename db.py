@@ -36,12 +36,23 @@ class MySQLDB():
         cur.execute('SELECT entity FROM '+self.table+' WHERE mention = "'+mention+'"')
         result = cur.fetchall()
         cur.close()
-        print result[0]
         if result:
-            result = [r[0][r[0].index('<')+1:r[0].index('>')] for r in result]
+            #result = [r[0][r[0].index('<')+1:r[0].index('>')] for r in result]
+            result = [r[0] for r in result]
             return result
         else:
             return []
+
+    def get_candidate_and_count(self, mention):
+        cur = self.conn.cursor()
+        cur.execute('SELECT entity,count FROM '+self.table+' WHERE mention = "'+mention+'"')
+        result = cur.fetchall()
+        cur.close()
+        if result:
+            result = dict((r[0],r[1]) for r in result)
+            return result
+        else:
+            return {}
 
     def get_fuzzy_candidateset(self, mention):
         """
