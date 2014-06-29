@@ -36,6 +36,7 @@ class MySQLDB():
         cur.execute('SELECT entity FROM '+self.table+' WHERE mention = "'+mention+'"')
         result = cur.fetchall()
         cur.close()
+        print result[0]
         if result:
             result = [r[0][r[0].index('<')+1:r[0].index('>')] for r in result]
             return result
@@ -71,6 +72,20 @@ class MySQLDB():
         cur.execute('SELECT entity FROM '+self.table+' WHERE mention = "'+mention+'"')
         #if cur.fetchone()
         cur.close()
+
+    def get_link_count(self, mention, entity):
+        cur = self.conn.cursor()
+        cur.execute('SELECT count FROM '+self.table+' WHERE mention = "'+mention+'" AND entity = "'+ entity + '"')
+        r = cur.fetchone()[0]
+        cur.close()
+        return r
+
+    def get_all_link_count(self, mention):
+        cur = self.conn.cursor()
+        cur.execute('SELECT entity,count FROM '+self.table+' WHERE mention = "'+mention+'"')
+        r = dict(cur.fetchall())
+        cur.close()
+        return r
 
     def close(self):
         self.conn.close()
@@ -210,6 +225,11 @@ class Xlore():
                 break
         return image_urls[:n] if len(image_urls) >= 3 else image_urls
 
+    def get_innerLink(self, entity_id):
+
+        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/enwiki/fulltext> ?object }'%entity_id
+        return self.fetch_multi_result(sq)
+
     def get_littleentity(self, entity_id, lan):
         entity = {}
         entity["_id"] = entity_id
@@ -331,8 +351,8 @@ if __name__=="__main__":
 
     xlore = Xlore()
     #print xlore.get_image(1032938)
-    print xlore.get_abstract(1032938)
-    print xlore.get_fulltext(1032938)
-    print xlore.get_title(1032938)
-    print xlore.get_littleentity(1032938)
+    #print xlore.get_abstract(1032938)
+    #print xlore.get_fulltext(1032938)
+    print xlore.get_title(6612130)
+    #print xlore.get_littleentity(1032938)
     
