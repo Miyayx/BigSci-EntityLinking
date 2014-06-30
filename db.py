@@ -16,20 +16,39 @@ PREFIX = "http://keg.cs.tsinghua.edu.cn/instance/"
 
 class MySQLDB():
 
+    configs = ConfigTool.parse_config("db.cfg","MySQL")
+    print "configs:",configs
+    HOST   = configs["host"]
+    PORT   = int(configs["port"])
+    USER   = configs["user"]
+    PASSWD = configs["password"]
+    DBNAME     = 'entity_linking'
+    _db = None
+    try:
+        _db=MySQLdb.connect(host=HOST, user=USER, passwd=PASSWD,db=DBNAME,port=PORT)
+    except MySQLdb.Error, e:
+        print "Mysql Error %d: %s" % (e.args[0], e.args[1])
+
+    def __new__(cls, *args, **kwargs):
+        print "__new__"
+        if not cls._db:
+            cls._db = super(MySQLDB, cls).__new__(cls, *args, **kwargs)
+        return cls._db
+
     def __init__(self):
-        configs = ConfigTool.parse_config("db.cfg","MySQL")
-        print "configs:",configs
-        self.host   = configs["host"]
-        self.port   = int(configs["port"])
-        self.user   = configs["user"]
-        self.passwd = configs["password"]
-        self.db     = 'entity_linking'
+        #configs = ConfigTool.parse_config("db.cfg","MySQL")
+        #print "configs:",configs
+        #self.host   = configs["host"]
+        #self.port   = int(configs["port"])
+        #self.user   = configs["user"]
+        #self.passwd = configs["password"]
+        #self.db     = 'entity_linking'
         self.table  = 'mention_entity_count'
-        self.conn   = None
-        try:
-            self.conn=MySQLdb.connect(host=self.host, user=self.user, passwd=self.passwd,db=self.db,port=self.port)
-        except MySQLdb.Error, e:
-            print "Mysql Error %d: %s" % (e.args[0], e.args[1])
+        self.conn   = MySQLDB._db
+        #try:
+        #    self.conn=MySQLdb.connect(host=self.host, user=self.user, passwd=self.passwd,db=self.db,port=self.port)
+        #except MySQLdb.Error, e:
+        #    print "Mysql Error %d: %s" % (e.args[0], e.args[1])
 
     def get_candidateset(self, mention):
         cur = self.conn.cursor()
