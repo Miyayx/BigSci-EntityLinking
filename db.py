@@ -44,6 +44,7 @@ class MySQLDB():
         #self.passwd = configs["password"]
         #self.db     = 'entity_linking'
         self.table  = 'mention_entity_count'
+        #self.table  = 'mention2entities'
         self.conn   = MySQLDB._db
         #try:
         #    self.conn=MySQLdb.connect(host=self.host, user=self.user, passwd=self.passwd,db=self.db,port=self.port)
@@ -117,9 +118,33 @@ class MySQLDB():
         cur.close()
         return r
 
+    def get_littleentity(self, title):
+        entity = {}
+        entity["_id"] = None
+        entity["uri"] = None
+        entity["url"] = "http://en.wikipedia.org/wiki/"+title.split().join("_")
+
+        cur = self.conn.cursor()
+        cur.execute('SELECT type,super_topic,abstract,image FROM wikidb WHERE title= "'+title+'"')
+        result = cur.fetchone()
+        cur.close()
+
+        entity["title"] = title
+        entity["type"] = result[0]
+        entity["super_topic"] = result[1]
+        entity["abstract"] = result[2]
+        entity["image"] = result[3]
+
+        return entity
+
     def close(self):
         self.conn.close()
 
+    def insert_wiki_entity(self, title, super_topic, abstract,url):
+        cur = self.conn.cursor()
+        cur.execute("INSERT INTO wiki_db (title,abstract,super_topic,url) VALUES('"+title+"','"+abstract+"','"+super_topic+"','"+url+"')")
+        cur.close()
+        
 
 class Xlore():
 
@@ -245,6 +270,48 @@ class Xlore():
                 return result
         return None
 
+    def get_type(self, entity_id, lan="en"):
+        if lan == "en":
+            return {"en":self.get_en_type(entity_id)}
+        if lan == "ch":
+            return {"ch":self.get_ch_type(entity_id)}
+        if lan == "all":
+            return {"en":self.get_en_type(entity_id),"ch":self.get_ch_type(entity_id)}
+
+    def get_en_type(self, entity_id):
+        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/enwiki/instanceOf> ?type }'%entity_id
+        return self.fetch_one_result(sq)
+
+    def get_ch_type(self, entity_id):
+        ch_baike = ["zhwiki", "baidu", "hudong"]
+        for ch in ch_baike:
+            sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/instanceOf> ?type}'%(entity_id,ch)
+            result = self.fetch_one_result(sq)
+            if result:
+                return result
+        return None
+
+    def get_superclass(self, entity_id, lan="en"):
+        if lan == "en":
+            return {"en":self.get_en_superclass(entity_id)}
+        if lan == "ch":
+            return {"ch":self.get_ch_superclass(entity_id)}
+        if lan == "all":
+            return {"en":self.get_en_superclass(entity_id),"ch":self.get_ch_type(entity_id)}
+
+    def get_en_superclass(self, entity_id):
+        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/enwiki/iSubTopicOf> ?t }'%entity_id
+        return self.fetch_one_result(sq)
+
+    def get_ch_superclass(self, entity_id):
+        ch_baike = ["zhwiki", "baidu", "hudong"]
+        for ch in ch_baike:
+            sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/iSubTopicOf> ?t}'%(entity_id,ch)
+            result = self.fetch_one_result(sq)
+            if result:
+                return result
+        return None
+
     def get_image(self, entity_id, n = 3):
         image_urls = []
         lore = ["enwiki","hudong","zhwiki"]
@@ -257,7 +324,7 @@ class Xlore():
 
     def get_innerLink(self, entity_id):
 
-        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/enwiki/fulltext> ?object }'%entity_id
+        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/enwiki/innerLink> ?link}'%entity_id
         return self.fetch_multi_result(sq)
 
     def get_littleentity(self, entity_id, lan):
@@ -383,6 +450,7 @@ if __name__=="__main__":
     #print xlore.get_image(1032938)
     #print xlore.get_abstract(1032938)
     #print xlore.get_fulltext(1032938)
-    print xlore.get_title(6612130)
+    #print xlore.get_title(6612130)
     #print xlore.get_littleentity(1032938)
+    print xlore.get_innerLink()
     
