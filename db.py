@@ -142,7 +142,13 @@ class MySQLDB():
 
     def insert_wiki_entity(self, title, super_topic, abstract,url):
         cur = self.conn.cursor()
-        cur.execute("INSERT INTO wiki_db (title,abstract,super_topic,url) VALUES('"+title+"','"+abstract+"','"+super_topic+"','"+url+"')")
+        title = MySQLdb.escape_string(title)
+        url = MySQLdb.escape_string(url)
+        super_topic = MySQLdb.escape_string(super_topic)
+        abstract = MySQLdb.escape_string(abstract)
+        cur.execute('INSERT INTO entity_linking.wiki_db (title,abstract,super_topic,url) VALUES("%s","%s","%s","%s");'%(title,abstract,super_topic,url))
+        MySQLDB._db.commit()
+        
         cur.close()
         
 
@@ -155,8 +161,8 @@ class Xlore():
     UID  = configs["user"]
     PWD  = configs["password"]
     DRIVER = configs["driver"]
-    #_virtodb = pyodbc.connect('DRIVER={VOS};HOST=%s:%d;UID=%s;PWD=%s'%(HOST, PORT, UID, PWD))
-    _virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(DRIVER, HOST, PORT, UID, PWD))
+    _virtodb = pyodbc.connect('DRIVER={VOS};HOST=%s:%d;UID=%s;PWD=%s'%(HOST, PORT, UID, PWD))
+    #_virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(DRIVER, HOST, PORT, UID, PWD))
     
     def __new__(cls, *args, **kwargs):
         print "__new__"
