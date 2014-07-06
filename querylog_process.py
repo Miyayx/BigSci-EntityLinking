@@ -122,6 +122,20 @@ class ArnetDB():
         except MySQLdb.Error, e:
             print "Mysql Error %d: %s" % (e.args[0], e.args[1])
 
+    def get_all_authers(self):
+
+        cur = self.conn.cursor()
+        cur.execute('SELECT names FROM arnet_db.na_person;')
+        result = cur.fetchone()
+        authors = set()
+        while result:
+            a = result[0]
+            authors.add(a)
+            result = cur.fetchone()
+
+        cur.close()
+        return authors
+
     def get_popular_auther_id(self):
         print "popular_auther_id"
         cur = self.conn.cursor()
@@ -195,24 +209,28 @@ if __name__=="__main__":
     #search_keyword_statistics("./data/query_keywords.dat")
     #hit_keyword("./data/querylog_test_hit_result.dat")
 
-    f1 = open("./data/author_100.dat","w")
-    f2 = open("./data/interest.dat","w")
-    adb = ArnetDB()
-    ins = set()
-    for aid in adb.get_popular_auther_id():
-        for a in adb.get_author_name(aid).split(","):
-            f1.write(a+"\n")
-        ins.update(adb.get_author_interest(aid))
+    #f1 = open("./data/author_100.dat","w")
+    #f2 = open("./data/interest.dat","w")
+    #adb = ArnetDB()
+    #ins = set()
+    #for aid in adb.get_popular_auther_id():
+    #    for a in adb.get_author_name(aid).split(","):
+    #        f1.write(a+"\n")
+    #    ins.update(adb.get_author_interest(aid))
 
-    for i in ins:
-        f2.write(i+"\n")
+    #for i in ins:
+    #    f2.write(i+"\n")
 
-    f1.close()
-    f2.close()
+    #f1.close()
+    #f2.close()
 
     #f = open("./data/all_intetest.dat","w")
     #for i in adb.get_all_intetest():
     #    f.write(i+"\n")
     #f.close()
     
-
+    f = open("./data/all_authors.dat","w")
+    adb = ArnetDB()
+    for a in adb.get_all_authers():
+        f.write(a+"\n")
+    f.close()
