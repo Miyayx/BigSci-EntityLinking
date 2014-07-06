@@ -3,11 +3,13 @@
 
 class LittleEntity():
 
-    def __init__(self, _id, uri, url, title, abstract, image, similarity = 0):
+    def __init__(self, _id, uri, url,type, title, super_topic, abstract, image, similarity = 0):
         self._id        = _id
         self.uri        = uri
         self.url        = url
+        self.type     = type
         self.title    = title
+        self.super_topic = super_topic
         self.abstract = abstract
         self.image    = image
         self.sim      = similarity

@@ -70,8 +70,8 @@ response: format:json:
 
 """
 
-URL = 'http://localhost:5655/linking'
-#URL = 'http://166.111.68.66:5656/linking'
+#URL = 'http://localhost:5655/linking'
+URL = 'http://166.111.68.66:5656/linking'
 #URL = 'http://10.1.1.23:5656/linking'
 
 def abstract_test():
@@ -109,6 +109,7 @@ def query_test(q):
     resp = f.read()
     return resp
 
+CSV_DELIMITER = ","
 def querylog_test(logfn, hitfile=None, statisfile=None):
     import time
     import json
@@ -120,6 +121,7 @@ def querylog_test(logfn, hitfile=None, statisfile=None):
     ch = 0
     en = 0
     not_hit = []
+    hit_uri = []
     if hitfile:
         hitf = open(hitfile,"w")
     if statisfile:
@@ -141,29 +143,35 @@ def querylog_test(logfn, hitfile=None, statisfile=None):
         j = json.loads(r)
         if len(j["entity"]) > 0:
             hit += 1
-            print keyword
-            print r
-            hitf.write(keyword+"\t")
-            hitf.write("Hit\t")
-            try:
-                hitf.write(j["entity"][0]["title"]["en"]+"\t")
-            except:
-                print  j["entity"][0]["title"]["en"]
-            hitf.write(j["entity"][0]["url"]+"\n")
+            #print keyword
+            #print r
+            hit_uri.append(j["entity"][0]["uri"])
+            if hitfile:
+                hitf.write(keyword+CSV_DELIMITER)
+                hitf.write("Hit"+CSV_DELIMITER)
+                try:
+                    hitf.write(j["entity"][0]["title"]["en"]+CSV_DELIMITER)
+                except:
+                    print  j["entity"][0]["title"]["en"]
+                hitf.write(j["entity"][0]["type"]+"\n")
+                hitf.write(j["entity"][0]["super_topic"]+"\n")
+                hitf.write(j["entity"][0]["abstract"]+"\n")
+                hitf.write(j["entity"][0]["url"]+"\n")
     #        result_file.write(keyword+"\n")
     #        result_file.write(r+"\n")
     #        result_file.write("\n")
-            if not j["entity"][0]["title"]["en"] == "null":
+            if j["entity"][0]["title"]["en"]:
                 en += 1
-            if not j["entity"][0]["title"]["ch"] == "null":
+            if j["entity"][0]["title"]["ch"]:
                 ch += 1
         else:
-            hitf.write(keyword+"\t")
-            hitf.write("NOT Hit\n")
+            if hitfile:
+                hitf.write(keyword+CSV_DELIMITER)
+                hitf.write("NOT Hit\n")
             not_hit.append(keyword)
 
         duration = time.time()-start
-        print "Time:",duration
+        #print "Time:",duration
         if duration < min_time:
             min_time = duration
         if duration > max_time:
@@ -172,7 +180,8 @@ def querylog_test(logfn, hitfile=None, statisfile=None):
         times.append(duration)
 
     #result_file.close()
-    hitf.close()
+    if hitfile:
+        hitf.close()
 
     print "Avg time:", sum(times)/len(times)
     print "Max time:", max_time
@@ -181,20 +190,20 @@ def querylog_test(logfn, hitfile=None, statisfile=None):
     ratio = (hit*1.0)/count
     print "Hit Ratio:",ratio
 
-    if statisf:
-        statisf.write("Total: "+str(count))
-        statisf.write("Hit: "+str(hit))
-        statisf.write("Hit Ratio: "+str(ratio))
-        statisf.write("Has En title:"+str(en))
-        statisf.write("Has Ch title:"+str(ch))
-        statisf.write("Avg time: "+ str(sum(times)/len(times)))
-        statisf.write("Max time: "+str(max_time))
-        statisf.write("Min time: "+str(min_time))
-        statisf.write("Hot Hit List:"+"\n")
-        statisf.write(str(not_hit))
+    if statisfile:
+        statisf.write("Total: "+str(count)+"\n")
+        statisf.write("Hit: "+str(hit)+"\n")
+        statisf.write("Hit Ratio: "+str(ratio)+"\n")
+        statisf.write("Has En title:"+str(en)+"\n")
+        statisf.write("Has Ch title:"+str(ch)+"\n")
+        statisf.write("Avg time: "+ str(sum(times)/len(times))+"\n")
+        statisf.write("Max time: "+str(max_time)+"\n")
+        statisf.write("Min time: "+str(min_time)+"\n")
+        #statisf.write("Hot Hit List:"+"\n")
+        #statisf.write(str(not_hit))
         statisf.close()
 
-    return hit,ratio
+    return hit,ratio,hit_uri
 
 if __name__=="__main__":
     #abstract_test()
