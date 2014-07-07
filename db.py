@@ -43,7 +43,7 @@ class MySQLDB():
         #self.user   = configs["user"]
         #self.passwd = configs["password"]
         #self.db     = 'entity_linking'
-        self.table  = 'mention_entity_count'
+        self.table  = 'new_mention_entity_count'
         #self.table  = 'mention2entities'
         self.conn   = MySQLDB._db
         #try:
@@ -53,7 +53,7 @@ class MySQLDB():
 
     def get_candidateset(self, mention):
         cur = self.conn.cursor()
-        cur.execute('SELECT entity FROM '+self.table+' WHERE mention = "'+mention+'"')
+        cur.execute('SELECT entity FROM '+self.table+' WHERE mention = "'+MySQLdb.escape_string(mention)+'"')
         result = cur.fetchall()
         cur.close()
         if result:
@@ -65,7 +65,7 @@ class MySQLDB():
 
     def get_candidate_and_count(self, mention):
         cur = self.conn.cursor()
-        cur.execute('SELECT entity,count FROM '+self.table+' WHERE mention = "'+mention+'"')
+        cur.execute('SELECT entity,count FROM '+self.table+' WHERE mention = "'+MySQLdb.escape_string(mention)+'"')
         result = cur.fetchall()
         cur.close()
         if result:
@@ -74,19 +74,6 @@ class MySQLDB():
         else:
             return {}
 
-    def get_fuzzy_candidateset(self, mention):
-        """
-        untested
-        """
-        cur = self.conn.cursor()
-        cur.execute('SELECT entity FROM '+self.table+' WHERE mention = "%'+mention+'%"')
-        result = cur.fetchall()
-        cur.close()
-        if result:
-            result = [r[0][r[0].index('<')+1:r[0].index('>')] for r in result]
-            return result
-        else:
-            return None
 
     def get_mentions(self):
         cur = self.conn.cursor()
@@ -150,6 +137,12 @@ class MySQLDB():
         MySQLDB._db.commit()
         
         cur.close()
+
+    def insert_candidate(self, mention, uri, count):
+        cur = self.conn.cursor()
+        cur.execute('INSERT INTO %s (mention,entity,count) VALUES("%s","%s","%d");'%(self.table,mention,uri,count))
+        MySQLDB._db.commit()
+        cur.close()
         
 
 class Xlore():
@@ -161,8 +154,8 @@ class Xlore():
     UID  = configs["user"]
     PWD  = configs["password"]
     DRIVER = configs["driver"]
-    _virtodb = pyodbc.connect('DRIVER={VOS};HOST=%s:%d;UID=%s;PWD=%s'%(HOST, PORT, UID, PWD))
-    #_virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(DRIVER, HOST, PORT, UID, PWD))
+    #_virtodb = pyodbc.connect('DRIVER={VOS};HOST=%s:%d;UID=%s;PWD=%s'%(HOST, PORT, UID, PWD))
+    _virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(DRIVER, HOST, PORT, UID, PWD))
     
     def __new__(cls, *args, **kwargs):
         print "__new__"
@@ -212,6 +205,27 @@ class Xlore():
         finally:
             cursor.close()
         return results
+
+    def get_concept_label(self, entity_id):
+        if lan == "en":
+            return {"en":self.get_en_concept_label(entity_id)}
+        if lan == "ch":
+            return {"ch":self.get_ch_conecpt_label(entity_id)}
+        if lan == "all":
+            return {"en":self.get_en_conecpt_label(entity_id),"ch":self.get_ch_conecpt_label(entity_id)}
+    
+    def get_en_concept_label(self, entity_id):
+        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/concept/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?label }'%entity_id
+        return self.fetch_one_result(sq)
+
+    def get_ch_concept_label(self, entity_id):
+        ch_baike = ["zhwiki", "baidu", "hudong"]
+        for ch in ch_baike:
+            sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/concept/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/label> ?label}'%(entity_id,ch)
+            result = self.fetch_one_result(sq)
+            if result:
+                return result
+        return None
 
     def get_abstract(self, entity_id, lan="en"):
         if lan == "en":
@@ -285,17 +299,26 @@ class Xlore():
             return {"en":self.get_en_type(entity_id),"ch":self.get_ch_type(entity_id)}
 
     def get_en_type(self, entity_id):
-        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/enwiki/instanceOf> ?type }'%entity_id
-        return self.fetch_one_result(sq)
+        concepts = []
+        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/instanceOf> ?type }'%entity_id
+        result = self.fetch_multi_result(sq)
+        for r in result:
+            c_e_id = r.split("/")[-1]
+            label = self.get_en_concept_label(c_e_id)
+            if label:
+                concepts.append(label)
+        return concepts
 
     def get_ch_type(self, entity_id):
-        ch_baike = ["zhwiki", "baidu", "hudong"]
-        for ch in ch_baike:
-            sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/instanceOf> ?type}'%(entity_id,ch)
-            result = self.fetch_one_result(sq)
-            if result:
-                return result
-        return None
+        concepts = []
+        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/instanceOf> ?type}'%(entity_id)
+        result = (self.fetch_multi_result(sq))
+        for r in result:
+            c_e_id = r.split("/")[-1]
+            label = self.get_ch_concept_label(c_e_id)
+            if label:
+                concepts.append(label)
+        return concepts
 
     def get_superclass(self, entity_id, lan="en"):
         if lan == "en":
@@ -303,20 +326,29 @@ class Xlore():
         if lan == "ch":
             return {"ch":self.get_ch_superclass(entity_id)}
         if lan == "all":
-            return {"en":self.get_en_superclass(entity_id),"ch":self.get_ch_type(entity_id)}
+            return {"en":self.get_en_superclass(entity_id),"ch":self.get_ch_superclass(entity_id)}
 
     def get_en_superclass(self, entity_id):
-        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/enwiki/iSubTopicOf> ?t }'%entity_id
-        return self.fetch_one_result(sq)
+        concepts = []
+        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/iSubTopicOf> ?t }'%entity_id
+        result = self.fetch_multi_result(sq)
+        for r in result:
+            c_e_id = r.split("/")[-1]
+            label = self.get_en_concept_label(c_e_id)
+            if label:
+                concepts.append(label)
+        return concepts
 
     def get_ch_superclass(self, entity_id):
-        ch_baike = ["zhwiki", "baidu", "hudong"]
-        for ch in ch_baike:
-            sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/iSubTopicOf> ?t}'%(entity_id,ch)
-            result = self.fetch_one_result(sq)
-            if result:
-                return result
-        return None
+        concepts = []
+        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/iSubTopicOf> ?t}'%(entity_id)
+        result = self.fetch_multi_result(sq)
+        for r in result:
+            c_e_id = r.split("/")[-1]
+            label = self.get_ch_concept_label(c_e_id)
+            if label:
+                concepts.append(label)
+        return concepts
 
     def get_image(self, entity_id, n = 3):
         image_urls = []
@@ -348,6 +380,8 @@ class Xlore():
         #entity["abstract"] = a[0][0] if a else None
 
         entity["title"] = self.get_title(entity_id, lan)
+        entity["type"] = self.get_type(entity_id, lan)
+        entity["super_topic"] = self.get_superclass(entity_id, lan)
         entity["abstract"] = self.get_abstract(entity_id, lan)
         entity["image"] = self.get_image(entity_id)
         print "entity", entity
@@ -458,5 +492,7 @@ if __name__=="__main__":
     #print xlore.get_fulltext(1032938)
     #print xlore.get_title(6612130)
     #print xlore.get_littleentity(1032938)
-    print xlore.get_innerLink()
+    #print xlore.get_innerLink()
+    print xlore.get_type(1039711,"all")
+    print xlore.get_superclass(1039711,"all")
     

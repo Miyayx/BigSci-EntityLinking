@@ -146,7 +146,18 @@ class QueryEL():
                 #if no session context, return the most similar title entity
                 es = Disambiguation(self.query_str, self.query_str, candidates).get_best_use_freq(3)
             for e in es:
-                le = self.xlore.get_littleentity(e, self.lan)
+                l = e.split("###")
+                t = l[0]
+                u = l[-1]
+                if len(u) > 0:
+                    le = self.xlore.get_littleentity(u, self.lan)
+                else:
+                    le = self.db.get_littleentity(t)
+                #if e.isdigit():
+                #    le = self.xlore.get_littleentity(e, self.lan)
+                #else:
+                #    le = self.db.get_littleentity(e)
+
                 self.entities.append(LittleEntity(**le))
 
 def loadCandidateSet():

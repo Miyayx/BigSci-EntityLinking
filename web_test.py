@@ -70,8 +70,8 @@ response: format:json:
 
 """
 
-#URL = 'http://localhost:5655/linking'
-URL = 'http://166.111.68.66:5656/linking'
+URL = 'http://localhost:5655/linking'
+#URL = 'http://166.111.68.66:5656/linking'
 #URL = 'http://10.1.1.23:5656/linking'
 
 def abstract_test():
@@ -124,6 +124,7 @@ def querylog_test(logfn, hitfile=None, statisfile=None):
     hit_uri = []
     if hitfile:
         hitf = open(hitfile,"w")
+        hitf.write("mention,hit,title,type,super_topic,abstract,url\n")
     if statisfile:
         statisf = open(statisfile,"w")
     #result_file = open("./data/querylog_test_hit_result.dat","w")
@@ -150,12 +151,22 @@ def querylog_test(logfn, hitfile=None, statisfile=None):
                 hitf.write(keyword+CSV_DELIMITER)
                 hitf.write("Hit"+CSV_DELIMITER)
                 try:
-                    hitf.write(j["entity"][0]["title"]["en"]+CSV_DELIMITER)
-                except:
+                    hitf.write(j["entity"][0]["title"]["en"].replace(",",".").encode("utf-8")+CSV_DELIMITER)
+                except Exception, er:
+                    print er
                     print  j["entity"][0]["title"]["en"]
-                hitf.write(j["entity"][0]["type"]+"\n")
-                hitf.write(j["entity"][0]["super_topic"]+"\n")
-                hitf.write(j["entity"][0]["abstract"]+"\n")
+                if j["entity"][0]["type"]["en"]:
+                    hitf.write("#".join(j["entity"][0]["type"]["en"])+CSV_DELIMITER)
+                else:
+                    hitf.write(""+CSV_DELIMITER)
+                if j["entity"][0]["super_topic"]["en"]:
+                    hitf.write("#".join(j["entity"][0]["super_topic"]["en"])+CSV_DELIMITER)
+                else:
+                    hitf.write(""+CSV_DELIMITER)
+                if j["entity"][0]["abstract"]["en"]:
+                    hitf.write(j["entity"][0]["abstract"]["en"].replace(",",".").encode("utf-8")+CSV_DELIMITER)
+                else:
+                    hitf.write(""+CSV_DELIMITER)
                 hitf.write(j["entity"][0]["url"]+"\n")
     #        result_file.write(keyword+"\n")
     #        result_file.write(r+"\n")
@@ -169,6 +180,8 @@ def querylog_test(logfn, hitfile=None, statisfile=None):
                 hitf.write(keyword+CSV_DELIMITER)
                 hitf.write("NOT Hit\n")
             not_hit.append(keyword)
+        if hitfile:
+            hitf.flush()
 
         duration = time.time()-start
         #print "Time:",duration
@@ -214,8 +227,8 @@ if __name__=="__main__":
     #querylog_test("./data/interest.dat","./test/interest_hit.csv","./test/interest_statis.dat");
     #querylog_test("./data/author_100.dat","./test/author_100_hit.csv","./test/author_100_statis.dat");
 
-    querylog_test("./data/arnet_interest.dat","./test/interest_hit.csv","./test/interest_stat.dat");
-    querylog_test("./data/arnet_author.dat","./test/author_hit.csv","./test/author_stat.dat");
+    querylog_test("./data/arnet_interest.dat","./test/new_interest_hit.csv","./test/new_interest_stat.dat");
+    querylog_test("./data/arnet_author.dat","./test/new_author_hit.csv","./test/new_author_stat.dat");
 
     #for q in ['machine learning','data structure','data mining','Computer architecture']:
     #for q in ['data mining and machine learning',]:
