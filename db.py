@@ -22,7 +22,7 @@ class MySQLDB():
     PORT   = int(configs["port"])
     USER   = configs["user"]
     PASSWD = configs["password"]
-    DBNAME     = 'entity_linking'
+    DBNAME = 'entity_linking'
     _db = None
     try:
         _db=MySQLdb.connect(host=HOST, user=USER, passwd=PASSWD,db=DBNAME,port=PORT)
