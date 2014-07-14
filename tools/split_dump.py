@@ -9,7 +9,7 @@ def split_dump(in_dir, out_dir, dump_f):
     f = open(fn,"w")
     for l in open(in_dir+dump_f):
         if l.startswith("<mediawiki"): # article start
-            if end_num % 100000 == 0:
+            if end_num % 300000 == 0:
                 f.close()
                 n += 1
                 fn = out_dir+dump_f.split(".")[0]+"{:0>2d}.xml-p{:0>10d}p{:0>10d}".format(n,start_num,end_num)
