@@ -76,8 +76,8 @@ class LinkingResource(Resource):
         entity["uri"]       = e.uri
         entity["url"]       = e.url
         entity["title"]     = e.title
-        entity["type"]      = e.type
-        entity["super_topic"]     = e.super_topic
+        #entity["type"]      = e.type
+        #entity["super_topic"]     = e.super_topic
         entity["abstract"]  = e.abstract
         entity["image"]     = e.image
         entity["sim"]       = e.sim 
