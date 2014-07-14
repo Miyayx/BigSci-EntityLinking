@@ -1,15 +1,17 @@
 #!/usr/bin/python
 #-*-coding:utf-8-*-
 
+P_NUM = 300000
+
 def split_dump(in_dir, out_dir, dump_f):
     start_num = 0
     end_num   = 0
     n = 1
-    fn = out_dir+dump_f.split(".")[0]+"{:0>2d}.xml-p{:0>10d}p{:0>10d}".format(n, start_num, start_num+100000)
+    fn = out_dir+dump_f.split(".")[0]+"{:0>2d}.xml-p{:0>10d}p{:0>10d}".format(n, start_num, start_num+P_NUM)
     f = open(fn,"w")
     for l in open(in_dir+dump_f):
         if l.startswith("<mediawiki"): # article start
-            if end_num % 300000 == 0:
+            if end_num % P_NUM == 0:
                 f.close()
                 n += 1
                 fn = out_dir+dump_f.split(".")[0]+"{:0>2d}.xml-p{:0>10d}p{:0>10d}".format(n,start_num,end_num)
