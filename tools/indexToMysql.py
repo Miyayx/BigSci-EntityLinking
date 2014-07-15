@@ -32,15 +32,6 @@ class TitleURIdb():
 
     def create_new_table(self, table):
         """
-        CREATE  TABLE `entity_linking`.`title_uri` (
-        `id` INT NOT NULL AUTO_INCREMENT ,
-        `title` VARCHAR(2000) NOT NULL ,
-        `uri` VARCHAR(45) NOT NULL ,
-        PRIMARY KEY (`id`) ,
-        UNIQUE INDEX `id_UNIQUE` (`id` ASC) ,
-        UNIQUE INDEX `uri_UNIQUE` (`uri` ASC) ,
-        UNIQUE INDEX `title_UNIQUE` (`title` ASC) 
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
         """
 
         self.table = table
@@ -50,15 +41,20 @@ class TitleURIdb():
         id INT NOT NULL AUTO_INCREMENT ,
         title VARCHAR(2000) NOT NULL ,
         uri VARCHAR(45) NOT NULL ,
+        source VARCHAR(45) NOT NULL ,
         PRIMARY KEY (id) ,
-        UNIQUE INDEX id_UNIQUE (id ASC) ,
+        UNIQUE INDEX id_UNIQUE (id ASC)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
         """%(TitleURIdb.DBNAME, table)
+        
+        title_index="CREATE index t_index on %s(title);"%self.table
         
         cur = self.conn.cursor()
         cur.execute(drop_str)
         self.conn.commit()
         cur.execute(create_str)
+        self.conn.commit()
+        cur.execute(title_index)
         self.conn.commit()
         
         cur.close()
@@ -71,22 +67,24 @@ class TitleURIdb():
         for line in open("/home/xlore/rdfdb/loreInstanceList.ttl"):
             if not line.startswith("<"):
                 continue
+            s = line[10:line.index(" ",10)]
+            print s
             u = line[(line.index('<')+1):line.index('>')]
             t = line[(line.index('"')+1):line.rindex('"')]
-            if t == title:
-                continue
-            else:
-                uri = u
-                title = t
-                u = MySQLdb.escape_string(u)
-                t = MySQLdb.escape_string(t)
-                insert_str = "INSERT INTO %s (title,uri) VALUES('%s','%s');"%( self.table, t, u)
-                print insert_str
-                try: 
-                    cur.execute(insert_str)
-                    self.conn.commit()
-                except Exception,e:
-                    pass
+            #if t == title:
+                #continue
+            #else:
+            #    uri = u
+            #    title = t
+            u = MySQLdb.escape_string(u)
+            t = MySQLdb.escape_string(t)
+            insert_str = "INSERT INTO %s (title,uri) VALUES('%s','%s');"%( self.table, t, u)
+            print insert_str
+            try: 
+                cur.execute(insert_str)
+                self.conn.commit()
+            except Exception,e:
+                pass
                 
         cur.close()
 
