@@ -67,8 +67,7 @@ class TitleURIdb():
         for line in open("/home/xlore/rdfdb/loreInstanceList.ttl"):
             if not line.startswith("<"):
                 continue
-            s = line[10:line.index(" ",10)]
-            print s
+            s = line[10:line.index(":",10)]
             u = line[(line.index('<')+1):line.index('>')]
             t = line[(line.index('"')+1):line.rindex('"')]
             #if t == title:
@@ -78,7 +77,7 @@ class TitleURIdb():
             #    title = t
             u = MySQLdb.escape_string(u)
             t = MySQLdb.escape_string(t)
-            insert_str = "INSERT INTO %s (title,uri) VALUES('%s','%s');"%( self.table, t, u)
+            insert_str = "INSERT INTO %s (title,uri,source) VALUES('%s','%s','%s');"%( self.table, t, u, s)
             print insert_str
             try: 
                 cur.execute(insert_str)
