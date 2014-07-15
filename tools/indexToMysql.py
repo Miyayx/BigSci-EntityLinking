@@ -22,7 +22,7 @@ class TitleURIdb():
     DBNAME = 'entity_linking'
     _db = None
     try:
-        _db=MySQLdb.connect(host=HOST, user=USER, passwd=PASSWD,db=DBNAME,port=PORT)
+        _db=MySQLdb.connect(host=HOST, user=USER, passwd=PASSWD,db=DBNAME,port=PORT,charset='utf8')
     except MySQLdb.Error, e:
         print "Mysql Error %d: %s" % (e.args[0], e.args[1])
 
@@ -34,7 +34,7 @@ class TitleURIdb():
         """
         CREATE  TABLE `entity_linking`.`title_uri` (
         `id` INT NOT NULL AUTO_INCREMENT ,
-        `title` VARCHAR(200) NOT NULL ,
+        `title` VARCHAR(2000) NOT NULL ,
         `uri` VARCHAR(45) NOT NULL ,
         PRIMARY KEY (`id`) ,
         UNIQUE INDEX `id_UNIQUE` (`id` ASC) ,
@@ -48,26 +48,27 @@ class TitleURIdb():
         create_str = """
         CREATE  TABLE %s.%s (
         id INT NOT NULL AUTO_INCREMENT ,
-        title VARCHAR(200) NOT NULL ,
+        title VARCHAR(2000) NOT NULL ,
         uri VARCHAR(45) NOT NULL ,
         PRIMARY KEY (id) ,
         UNIQUE INDEX id_UNIQUE (id ASC) ,
-        UNIQUE INDEX title_UNIQUE (title ASC) 
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
         """%(TitleURIdb.DBNAME, table)
-
+        
         cur = self.conn.cursor()
         cur.execute(drop_str)
         self.conn.commit()
         cur.execute(create_str)
         self.conn.commit()
+        
         cur.close()
     
     def index_to_mysql(self):
         cur = self.conn.cursor()
         title = None
         uri   = None
-        for line in open("../data/loreInstanceList.ttl"):
+        #for line in open("../data/loreInstanceList.ttl"):
+        for line in open("/home/xlore/rdfdb/loreInstanceList.ttl"):
             if not line.startswith("<"):
                 continue
             u = line[(line.index('<')+1):line.index('>')]
@@ -81,9 +82,12 @@ class TitleURIdb():
                 t = MySQLdb.escape_string(t)
                 insert_str = "INSERT INTO %s (title,uri) VALUES('%s','%s');"%( self.table, t, u)
                 print insert_str
-             
-                cur.execute(insert_str)
-                self.conn.commit()
+                try: 
+                    cur.execute(insert_str)
+                    self.conn.commit()
+                except Exception,e:
+                    pass
+                
         cur.close()
 
 if __name__=="__main__":
