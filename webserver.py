@@ -26,7 +26,6 @@ class LinkingResource(Resource):
         request.setHeader("Content-Type","application/json")
 
         args = dict((k,v[0]) for k,v in request.args.items())
-        print type(args)
         print "request args:",args
         if not args.has_key('type') or len(args['type']) == 0:
             args['type'] = 'query'

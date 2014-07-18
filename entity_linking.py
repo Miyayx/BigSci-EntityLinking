@@ -102,10 +102,10 @@ class QueryEL():
         if self.no_entity():
             self.queries = []
             w_num = len(self.query_str.split())
-            if w_num > 5:
+            if w_num >= 5: # extract terminology
                 self.extract_mentions()
                 self.get_entity()
-            elif self.no_entity() and w_num >= 3 and w_num <=5:
+            if self.no_entity and w_num >= 3 and w_num <=5: # split query string into short substring
                 self.split_querystr()
                 self.get_entity()
 
@@ -140,37 +140,41 @@ class QueryEL():
 
     def split_querystr(self):
         ws = self.query_str.split()
-        for i in range(1,len(ws)-2):
+        for i in range(1,len(ws)-1):
             new_query = " ".join(ws[i:])
+            print "New Query:",new_query
             self.queries.append(Query(new_query, 0, 0))
 
     def get_entity(self):
         candidates = []
         for q in self.queries:
-            print q.text
-            candidates += self.db.get_candidateset(q.text)
-        print "length of candidates",len(candidates)
-        if candidates:
-            print candidates
-            if self.text and len(self.text) > 0:
-                es = Disambiguation(self.query_str, self.text, candidates ).get_best()
-            else:
-                #if no session context, return the most similar title entity
-                es = Disambiguation(self.query_str, self.query_str, candidates).get_best_use_freq(3)
-            for e in es:
-                l = e.split("###")
-                t = l[0]
-                u = l[-1]
-                if len(u) > 0:
-                    le = self.xlore.get_littleentity(u, self.lan)
+            print "Query String:",q.text
+            candidates = self.db.get_candidateset(q.text)
+            print "length of candidates",len(candidates)
+            if candidates:
+                print candidates
+                if self.text and len(self.text) > 0:
+                    es = Disambiguation(self.query_str, self.text, candidates ).get_best()
                 else:
-                    le = self.db.get_littleentity(t)
-                #if e.isdigit():
-                #    le = self.xlore.get_littleentity(e, self.lan)
-                #else:
-                #    le = self.db.get_littleentity(e)
+                    #if no session context, return the most similar title entity
+                    if len(self.queries) > 1:
+                        es = Disambiguation(q.text, self.query_str, candidates).get_best_use_freq(1)
+                    else:
+                        es = Disambiguation(q.text, self.query_str, candidates).get_best_use_freq(3)
+                for e in es:
+                    l = e.split("###")
+                    t = l[0]
+                    u = l[-1]
+                    if len(u) > 0:
+                        le = self.xlore.get_littleentity(u, self.lan)
+                    else:
+                        le = self.db.get_littleentity(t)
+                    #if e.isdigit():
+                    #    le = self.xlore.get_littleentity(e, self.lan)
+                    #else:
+                    #    le = self.db.get_littleentity(e)
 
-                self.entities.append(LittleEntity(**le))
+                    self.entities.append(LittleEntity(**le))
 
 def loadCandidateSet():
     global Candidateset
@@ -281,7 +285,7 @@ if __name__=="__main__":
     #################### Query Test #####################33
     db = MySQLDB()
     xlore = Xlore()
-    l = ["machine learning","data structure","data mining"]
+    l = ["Ontology-Based Data Access","Large-Scale Mobile Robot"]
     for i in l:
         param = {}
         param['type']  = 'query'

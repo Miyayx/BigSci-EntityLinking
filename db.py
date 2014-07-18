@@ -30,7 +30,6 @@ class MySQLDB():
         print "Mysql Error %d: %s" % (e.args[0], e.args[1])
 
     def __new__(cls, *args, **kwargs):
-        print "__new__"
         if not cls._db:
             cls._db = super(MySQLDB, cls).__new__(cls, *args, **kwargs)
         return cls._db
@@ -43,7 +42,7 @@ class MySQLDB():
         #self.user   = configs["user"]
         #self.passwd = configs["password"]
         #self.db     = 'entity_linking'
-        self.table  = 'new_mention_entity_count'
+        self.table  =  'mention_entity_count'
         #self.table  = 'mention2entities'
         self.conn   = MySQLDB._db
         #try:
@@ -158,7 +157,6 @@ class Xlore():
     _virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(DRIVER, HOST, PORT, UID, PWD))
     
     def __new__(cls, *args, **kwargs):
-        print "__new__"
         if not cls._virtodb:
             cls._virtodb = super(Xlore, cls).__new__(cls, *args, **kwargs)
         return cls._virtodb
@@ -179,7 +177,6 @@ class Xlore():
         try:
             result = results.fetchone()[0]
             if type(result) == tuple:
-                print "result is tuple"
                 result = result[0]
         except TypeError,e:
             return None
@@ -198,7 +195,6 @@ class Xlore():
         try:
             results = [r[0] for r in cursor.execute(sq).fetchall()]
             if results and len(results) > 0 and type(results[0]) == tuple:
-                print "result is tuple"
                 results = [r[0] for r in results]
         except TypeError,e:
             return []
@@ -418,7 +414,6 @@ class Xlore():
 
     @staticmethod
     def get_littleentity_from_web(entity_id):
-        print entity_id
         entity = {}
         entity["uri"] = entity_id
         #URL = 'http://xlore.org/sparql.action' 

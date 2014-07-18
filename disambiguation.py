@@ -36,7 +36,6 @@ class Disambiguation():
         """
 
         if len(self.candidates) == 1:
-            print "Has only one candidates"
             return self.candidates
 
         can_count = MySQLDB().get_candidate_and_count(self.mention)
