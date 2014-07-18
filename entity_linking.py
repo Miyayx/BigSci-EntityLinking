@@ -99,9 +99,15 @@ class QueryEL():
     def run(self):
         self.queries.append(Query(self.query_str, 0, 0))
         self.get_entity()
-        if self.no_entity() and len(self.query_str) > 20:
-            self.extract_mentions()
-            self.get_entity()
+        if self.no_entity():
+            self.queries = []
+            w_num = len(self.query_str.split())
+            if w_num > 5:
+                self.extract_mentions()
+                self.get_entity()
+            elif self.no_entity() and w_num >= 3 and w_num <=5:
+                self.split_querystr()
+                self.get_entity()
 
     def set_db(self, db):
         self.db = db
@@ -131,6 +137,12 @@ class QueryEL():
                 self.queries.append(q)
             
         print "%d mentions"%len(self.queries)
+
+    def split_querystr(self):
+        ws = self.query_str.split()
+        for i in range(1,len(ws)-2):
+            new_query = " ".join(ws[i:])
+            self.queries.append(Query(new_query, 0, 0))
 
     def get_entity(self):
         candidates = []
