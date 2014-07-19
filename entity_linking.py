@@ -103,13 +103,18 @@ class QueryEL():
             self.queries = []
             w_num = len(self.query_str.split())
             if w_num >= 5: # extract terminology
+                print "Extract terminology"
                 self.extract_mentions()
                 self.get_entity()
-            if self.no_entity and w_num >= 3 and w_num <=5: # split query string into short substring
+            if self.no_entity() and w_num >= 3 and w_num <=5: # split query string into short substring
+                print "Split Query string"
                 self.split_querystr()
                 self.get_entity()
 
     def set_db(self, db):
+        """
+        Set Candidateset Mysql db
+        """
         self.db = db
 
     def set_xlore(self, x):
@@ -119,14 +124,6 @@ class QueryEL():
         return True if len(self.entities) == 0 else False
 
     def extract_mentions(self):
-        #mentions = db.get_mentions()
-        #for m in mentions:
-        #    d = Distance.levenshtein(self.query_str, m)
-        #    if d < 10:
-        #        q = Query(m, 0, 0)
-        #        self.queries.append(q)
-
-        #print "Find %d mentions"%len(self.queries)
         te = TermExtractor()
         terms = te.get_terms(1, self.query_str)
         if len(terms) == 0:
@@ -142,7 +139,6 @@ class QueryEL():
         ws = self.query_str.split()
         for i in range(1,len(ws)-1):
             new_query = " ".join(ws[i:])
-            print "New Query:",new_query
             self.queries.append(Query(new_query, 0, 0))
 
     def get_entity(self):
@@ -228,33 +224,6 @@ def loadURI2Entity():
         uri = uri.split("/")[-1]
         URI2Entity[uri] = title
 
-# 建立倒排索引
-def create_index():
-    #  单词到对应的文章id
-    # {'word': [1, 2, 3], 'the': [7, 9], 'active': [1]}
-    index = {}
-    for id, article in article_map.items():
-        words = article.split()
-        for word in words:
-            word = word.lower()
-            if word in index:
-                index[word].add(id)
-            else:
-                index[word] = set([id])
-    return index
-
-def search_index(query):
-    # 切词
-    keywords = query.split()
-
-    if keywords:
-        ids = index.get(keywords[0], set())
-        for q in keywords[1:]:
-            #集合的交运算
-            ids = ids & index.get(q, set())
-        for id in ids:
-            print article_map[id]
-
 
 if __name__=="__main__":
     import datetime
@@ -285,7 +254,7 @@ if __name__=="__main__":
     #################### Query Test #####################33
     db = MySQLDB()
     xlore = Xlore()
-    l = ["Ontology-Based Data Access","Large-Scale Mobile Robot"]
+    l = ["data mining and social network"]
     for i in l:
         param = {}
         param['type']  = 'query'

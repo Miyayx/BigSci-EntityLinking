@@ -43,7 +43,7 @@ class Disambiguation():
             print k,v
         c_c = sorted(can_count.iteritems(), key=lambda d:d[1], reverse = True)
         if num <= 1 or not num:
-            return c_c[0][0]
+            return [c_c[0][0]]
         else:
             return [c[0] for c in c_c][:num]
 
