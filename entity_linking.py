@@ -124,18 +124,22 @@ class QueryEL():
         return True if len(self.entities) == 0 else False
 
     def extract_mentions(self):
+        """
+        Extract terminology from query string
+        """
         te = TermExtractor()
         terms = te.get_terms(1, self.query_str)
-        if len(terms) == 0:
-            self.queries.append(Query(self.query_str, 0, 0))
-        else:
+        if len(terms) > 0:
             for t in terms:
                 q = Query(t.lower(), 0, 0)
                 self.queries.append(q)
             
-        print "%d mentions"%len(self.queries)
+        print "%d term mentions"%len(self.queries)
 
     def split_querystr(self):
+        """
+        Get sub query strings according to truncate the origin string
+        """
         ws = self.query_str.split()
         for i in range(1,len(ws)-1):
             new_query = " ".join(ws[i:])
@@ -150,6 +154,7 @@ class QueryEL():
             if candidates:
                 print candidates
                 if self.text and len(self.text) > 0:
+                    #If section context exists
                     es = Disambiguation(self.query_str, self.text, candidates ).get_best()
                 else:
                     #if no session context, return the most similar title entity

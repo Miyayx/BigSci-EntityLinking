@@ -33,6 +33,10 @@ class TermExtractor:
             s.close()
             success = True
 
+        if len(terms) == 1 and len(terms[0])==0:
+            print "No Terms"
+            terms = []
+
         print terms
         return terms
 
