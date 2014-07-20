@@ -1,3 +1,4 @@
 *.pyc
 *.csv
 data/results
+test_ui/node_modules

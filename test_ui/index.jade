@@ -1,0 +1,46 @@
+extends ./bootstrap
+append head
+  title Test
+append style
+append script
+  mixin javascript('js/runtime.min.js')
+  mixin javascript('js/pagination.js')
+  mixin javascript('js/app.js')
+block content
+  .container
+    input#file(type="file",style="display:none")
+    br
+    div.btn-toolbar.controls-row.controls
+      div.btn-group
+        button#author(type="button").btn.btn-primary Author List
+      div.btn-group
+        button#term(type="button").btn.btn-primary Terminology
+      div.btn-group
+        button#paper(type="button").btn.btn-primary Paper Title
+    br
+    div#input-show(margin-bottom="30",style="display:none")
+      span(margin-right="100").text-info
+    div(margin-bottom="20",margin-top="20")
+      span 
+        span Total&nbsp:
+        span#total-n.badge.badge-inverse 100
+        span &nbspHit:&nbsp
+        span#hit-n.badge.badge-success 20
+        span &nbspHit Recoverage:&nbsp
+        span#hit-rec.badge.badge-info 0.0 
+        button#filter(type="button").btn.btn-primary.pull-right Hit Query
+    br
+    .row-fluid
+      table.table.table-striped.table-bordered.table-hover
+        thead
+          tr
+            th Query String
+            th XLore Title
+            th Type
+            th Super Topic
+            th Abstract
+            th URL
+            th Correct?
+        tbody#contents
+    .row-fluid#pages
+
