@@ -1,0 +1,25 @@
+extends bootstrap
+append head
+  title Entity Linking Show Page
+append style
+append script
+  mixin javascript('js/runtime.min.js')
+  mixin javascript('js/app.js')
+block content
+  .container
+    br
+    br
+    br
+    div
+      form.form-search.text-center
+        input#query.input-large.search-query(type="text")
+        button#search-btn(type="button").btn.btn-primary Search
+    br
+    .row-fluid
+      table.table.table-striped.table-bordered.table-hover
+        thead
+          tr
+            th Property
+            th Content
+        tbody#contents
+

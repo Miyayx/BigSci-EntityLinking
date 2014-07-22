@@ -3,6 +3,7 @@
 
 from twisted.web.resource import Resource
 from twisted.web import server, resource, http
+from twisted.web.static import File
 
 import datetime
 import simplejson
@@ -66,7 +67,6 @@ class LinkingResource(Resource):
         query["entity_id"]  = q.entity_id
         query["entity_uri"] = q.entity_uri
         query["entity_url"] = q.entity_url
-        query["similar"] = q.similarity 
         return query
 
     def parse_query_result(self, e ):
@@ -75,15 +75,23 @@ class LinkingResource(Resource):
         entity["uri"]       = e.uri
         entity["url"]       = e.url
         entity["title"]     = e.title
-        #entity["type"]      = e.type
-        #entity["super_topic"]     = e.super_topic
+        entity["type"]      = e.type
+        entity["super_topic"]     = e.super_topic
         entity["abstract"]  = e.abstract
         entity["image"]     = e.image
-        entity["sim"]       = e.sim 
         return entity
+
+class PageResource(Resource):
+     
+    def render_GET(self,request):
+        request.setHeader("Access-Control-Allow-Origin","*")
+        request.setHeader("Content-Type","application/json")
+        return " Hello World!"
 
 if __name__=="__main__":
     root = Resource()
+    #root.putChild("show", PageResource())
+    root.putChild("show", File("./web_ui"))
     root.putChild("linking", LinkingResource())
 
     from twisted.internet import reactor
