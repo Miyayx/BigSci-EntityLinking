@@ -25,7 +25,7 @@ class MySQLDB():
     DBNAME = configs["db"]
     _db = None
     try:
-        _db=MySQLdb.connect(host=HOST, user=USER, passwd=PASSWD,db=DBNAME,port=PORT)
+        _db=MySQLdb.connect(host=HOST, user=USER, passwd=PASSWD,db=DBNAME,port=PORT, charset="utf8")
     except MySQLdb.Error, e:
         print "Mysql Error %d: %s" % (e.args[0], e.args[1])
 

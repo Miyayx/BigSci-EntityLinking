@@ -37,7 +37,7 @@ $(document).ready(function() {
 	$("#search-btn").click(function() {
 		if ($("#query").val().length == 0) return;
 
-		$.getJSON("http://166.111.68.66:5656/linking", {
+		$.getJSON("/linking", {
 			type: "query",
 			query_str: $("#query").val()
 		}).done(function(data) {
