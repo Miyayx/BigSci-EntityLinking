@@ -34,19 +34,32 @@ $(document).ready(function() {
 		}
 	}
 
-	$("#search-btn").click(function() {
+	var search = function() {
+
 		if ($("#query").val().length == 0) return;
 
-        var spinner = new Spinner().spin();
-        $("#spin").append(spinner.el);
+		var spinner = new Spinner().spin();
+		$("#spin").append(spinner.el);
 
 		$.getJSON("/linking", {
 			type: "query",
 			query_str: $("#query").val()
 		}).done(function(data) {
-            spinner.stop();
+			spinner.stop();
 			displayTable(data);
+            $("#query").val("");
 		});
+	}
+
+	$("#query").keydown(function(e) {
+		if (e.which == 13) {
+			e.preventDefault();
+			search();
+		}
+	});
+
+	$("#search-btn").click(function() {
+		search();
 	});
 
 });
