@@ -5,11 +5,12 @@ append style
 append script
   mixin javascript('js/runtime.min.js')
   mixin javascript('js/app.js')
+  mixin javascript('http://fgnass.github.io/spin.js/spin.min.js')
 block content
   .container
     br
     br
-    br
+    div#spin
     div
       form.form-search.text-center
         input#query.input-large.search-query(type="text")

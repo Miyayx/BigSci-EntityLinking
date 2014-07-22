@@ -37,10 +37,14 @@ $(document).ready(function() {
 	$("#search-btn").click(function() {
 		if ($("#query").val().length == 0) return;
 
+        var spinner = new Spinner().spin();
+        $("#spin").append(spinner.el);
+
 		$.getJSON("/linking", {
 			type: "query",
 			query_str: $("#query").val()
 		}).done(function(data) {
+            spinner.stop();
 			displayTable(data);
 		});
 	});
