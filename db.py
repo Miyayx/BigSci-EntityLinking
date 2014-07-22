@@ -210,13 +210,13 @@ class Xlore():
             return {"en":self.get_en_conecpt_label(entity_id),"ch":self.get_ch_conecpt_label(entity_id)}
     
     def get_en_concept_label(self, entity_id):
-        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/concept/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?label }'%entity_id
+        sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/concept/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?label}'%entity_id
         return self.fetch_one_result(sq)
 
     def get_ch_concept_label(self, entity_id):
         ch_baike = ["zhwiki", "baidu", "hudong"]
         for ch in ch_baike:
-            sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/concept/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/label> ?label}'%(entity_id,ch)
+            sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/concept/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/label> ?label}'%(entity_id,ch)
             result = self.fetch_one_result(sq)
             if result:
                 return result
@@ -231,13 +231,13 @@ class Xlore():
             return {"en":self.get_en_abstract(entity_id),"ch":self.get_ch_abstract(entity_id)}
 
     def get_en_abstract(self, entity_id):
-        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/enwiki/abstract> ?object }'%entity_id
+        sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/abstract> ?object }'%entity_id
         return self.fetch_one_result(sq)
 
     def get_ch_abstract(self, entity_id):
         ch_baike = ["zhwiki", "baidu", "hudong"]
         for ch in ch_baike:
-            sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/abstract> ?title}'%(entity_id,ch)
+            sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/abstract> ?title}'%(entity_id,ch)
             result = self.fetch_one_result(sq)
             if result:
                 return result
@@ -252,13 +252,13 @@ class Xlore():
             return {"en":self.get_en_title(entity_id),"ch":self.get_ch_title(entity_id)}
 
     def get_en_title(self, entity_id):
-        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?title}'%entity_id
+        sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?title}'%entity_id
         return self.fetch_one_result(sq)
 
     def get_ch_title(self, entity_id):
         ch_baike = ["zhwiki", "baidu", "hudong"]
         for ch in ch_baike:
-            sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/label> ?title}'%(entity_id,ch)
+            sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/label> ?title}'%(entity_id,ch)
             result = self.fetch_one_result(sq)
             if result:
                 return result
@@ -273,13 +273,13 @@ class Xlore():
             return {"en":self.get_en_fulltext(entity_id),"ch":self.get_ch_fulltext(entity_id)}
 
     def get_en_fulltext(self, entity_id):
-        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/enwiki/fulltext> ?object }'%entity_id
+        sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/fulltext> ?object }'%entity_id
         return self.fetch_one_result(sq)
 
     def get_ch_fulltext(self, entity_id):
         ch_baike = ["zhwiki", "baidu", "hudong"]
         for ch in ch_baike:
-            sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/fulltext> ?e}'%(entity_id,ch)
+            sq = 'sparql select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/fulltext> ?e}'%(entity_id,ch)
             result = self.fetch_one_result(sq)
             if result:
                 return result
@@ -295,7 +295,7 @@ class Xlore():
 
     def get_en_type(self, entity_id):
         concepts = []
-        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/instanceOf> ?type }'%entity_id
+        sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/instanceOf> ?type }'%entity_id
         result = self.fetch_multi_result(sq)
         for r in result:
             c_e_id = r.split("/")[-1]
@@ -306,7 +306,7 @@ class Xlore():
 
     def get_ch_type(self, entity_id):
         concepts = []
-        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/instanceOf> ?type}'%(entity_id)
+        sq = 'sparql select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/instanceOf> ?type}'%(entity_id)
         result = (self.fetch_multi_result(sq))
         for r in result:
             c_e_id = r.split("/")[-1]
@@ -325,7 +325,7 @@ class Xlore():
 
     def get_en_superclass(self, entity_id):
         concepts = []
-        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/iSubTopicOf> ?t }'%entity_id
+        sq = 'sparql select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/iSubTopicOf> ?t }'%entity_id
         result = self.fetch_multi_result(sq)
         for r in result:
             c_e_id = r.split("/")[-1]
@@ -336,7 +336,7 @@ class Xlore():
 
     def get_ch_superclass(self, entity_id):
         concepts = []
-        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/iSubTopicOf> ?t}'%(entity_id)
+        sq = 'sparql select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/iSubTopicOf> ?t}'%(entity_id)
         result = self.fetch_multi_result(sq)
         for r in result:
             c_e_id = r.split("/")[-1]
@@ -349,7 +349,7 @@ class Xlore():
         image_urls = []
         lore = ["enwiki","hudong","zhwiki"]
         for l in lore:
-            sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/image> ?img }'%(entity_id, l)
+            sq = 'sparql select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/image> ?img }'%(entity_id, l)
             image_urls += self.fetch_multi_result(sq)
             if len(image_urls) > n:
                 break
@@ -357,7 +357,7 @@ class Xlore():
 
     def get_innerLink(self, entity_id):
 
-        sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/enwiki/innerLink> ?link}'%entity_id
+        sq = 'sparql select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/innerLink> ?link}'%entity_id
         return self.fetch_multi_result(sq)
 
     def get_littleentity(self, entity_id, lan):
@@ -385,7 +385,7 @@ class Xlore():
     @staticmethod
     def get_abstract_from_web(entity_id):
         URL = 'http://xlore.org/sparql.action' 
-        sq = 'select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/enwiki/abstract> ?object }'%entity_id
+        sq = 'select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/abstract> ?object }'%entity_id
         try:
             page = unicode(urllib2.urlopen(URL+"?sq="+quote(sq)).read(),'utf-8')
         except:
@@ -401,7 +401,7 @@ class Xlore():
     @staticmethod
     def get_fulltext_from_web(entity_id):
         URL = 'http://xlore.org/sparql.action' 
-        sq = 'select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/fulltext> ?e}'%entity_id
+        sq = 'select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/fulltext> ?e}'%entity_id
         page = urllib2.urlopen(URL+"?sq="+quote(sq)).read()
         soup = BeautifulSoup(page)
         table = soup.find("table")
@@ -442,7 +442,7 @@ class Xlore():
         lore = ["enwiki","baidu","hudong","zhwiki"]
         URL = 'http://xlore.org/sparql.action' 
         for l in lore:
-            sq = 'select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/image> ?img }'%(entity_id, l)
+            sq = 'select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/image> ?img }'%(entity_id, l)
             try:
                 page = unicode(urllib2.urlopen(URL+"?sq="+quote(sq)).read(),'utf-8')
             except:
@@ -459,7 +459,7 @@ class Xlore():
 
     @staticmethod
     def get_title_from_web(entity_id):
-        sq = 'select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?title}'%entity_id
+        sq = 'select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?title}'%entity_id
         URL = 'http://xlore.org/sparql.action' 
         try:
             page = unicode(urllib2.urlopen(URL+"?sq="+quote(sq)).read(),'utf-8')
