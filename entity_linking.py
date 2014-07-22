@@ -161,7 +161,7 @@ class QueryEL():
                     if len(self.queries) > 1:
                         es = Disambiguation(q.text, self.query_str, candidates).get_best_use_freq(1)
                     else:
-                        es = Disambiguation(q.text, self.query_str, candidates).get_best_use_freq(3)
+                        es = Disambiguation(q.text, self.query_str, candidates).get_best_use_freq(2)
                 for e in es:
                     l = e.split("###")
                     t = l[0]
