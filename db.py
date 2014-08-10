@@ -49,6 +49,14 @@ class MySQLDB():
         #except MySQLdb.Error, e:
         #    print "Mysql Error %d: %s" % (e.args[0], e.args[1])
 
+    def recreate(self):
+        self.conn.close()
+        try:
+            MySQLDB._db=MySQLdb.connect(host=MySQLDB.HOST, user=MySQLDB.USER, passwd=MySQLDB.PASSWD,db=MySQLDB.DBNAME,port=MySQLDB.PORT, charset="utf8")
+        except MySQLdb.Error, e:
+            print "Mysql Error %d: %s" % (e.args[0], e.args[1])
+        
+
     def get_candidateset(self, mention):
         cur = self.conn.cursor()
         cur.execute('SELECT entity FROM '+self.table+' WHERE mention = "'+MySQLdb.escape_string(mention)+'"')
@@ -152,8 +160,8 @@ class Xlore():
     UID  = configs["user"]
     PWD  = configs["password"]
     DRIVER = configs["driver"]
-    #_virtodb = pyodbc.connect('DRIVER={VOS};HOST=%s:%d;UID=%s;PWD=%s'%(HOST, PORT, UID, PWD))
-    _virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(DRIVER, HOST, PORT, UID, PWD))
+    _virtodb = pyodbc.connect('DRIVER={VOS};HOST=%s:%d;UID=%s;PWD=%s'%(HOST, PORT, UID, PWD))
+    #_virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(DRIVER, HOST, PORT, UID, PWD))
     
     def __new__(cls, *args, **kwargs):
         if not cls._virtodb:

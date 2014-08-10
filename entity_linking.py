@@ -98,7 +98,11 @@ class QueryEL():
 
     def run(self):
         self.queries.append(Query(self.query_str, 0, 0))
-        self.get_entity()
+        try:
+            self.get_entity()
+        except:
+            self.db.recreate()
+            self.get_entity()
         if self.no_entity():
             self.queries = []
             w_num = len(self.query_str.split())
