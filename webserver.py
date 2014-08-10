@@ -97,6 +97,11 @@ if __name__=="__main__":
     from twisted.internet import reactor
 
     reactor.listenTCP(5656, server.Site(root))
-    reactor.run()
+    try:
+        reactor.run()
+    except:
+        print "excpet"
+        reactor.stop()
+        reactor.run()
 
 

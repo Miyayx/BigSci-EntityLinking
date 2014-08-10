@@ -23,16 +23,6 @@ class MySQLDB():
     USER   = configs["user"]
     PASSWD = configs["password"]
     DBNAME = configs["db"]
-    _db = None
-    try:
-        _db=MySQLdb.connect(host=HOST, user=USER, passwd=PASSWD,db=DBNAME,port=PORT, charset="utf8")
-    except MySQLdb.Error, e:
-        print "Mysql Error %d: %s" % (e.args[0], e.args[1])
-
-    def __new__(cls, *args, **kwargs):
-        if not cls._db:
-            cls._db = super(MySQLDB, cls).__new__(cls, *args, **kwargs)
-        return cls._db
 
     def __init__(self):
         #configs = ConfigTool.parse_config("db.cfg","MySQL")
@@ -43,75 +33,80 @@ class MySQLDB():
         #self.passwd = configs["password"]
         #self.db     = 'entity_linking'
         self.table  = MySQLDB.configs["table"]
-        self.conn   = MySQLDB._db
+        self.conn   = None
         #try:
         #    self.conn=MySQLdb.connect(host=self.host, user=self.user, passwd=self.passwd,db=self.db,port=self.port)
         #except MySQLdb.Error, e:
         #    print "Mysql Error %d: %s" % (e.args[0], e.args[1])
 
-    def recreate(self):
-        self.conn.close()
+    def create_conn(self):
+        if self.conn:
+            self.conn.close()
         try:
-            MySQLDB._db=MySQLdb.connect(host=MySQLDB.HOST, user=MySQLDB.USER, passwd=MySQLDB.PASSWD,db=MySQLDB.DBNAME,port=MySQLDB.PORT, charset="utf8")
+            print "Create new connection"
+            self.conn = MySQLdb.connect(host=MySQLDB.HOST, user=MySQLDB.USER, passwd=MySQLDB.PASSWD,db=MySQLDB.DBNAME,port=MySQLDB.PORT, charset="utf8")
         except MySQLdb.Error, e:
             print "Mysql Error %d: %s" % (e.args[0], e.args[1])
-        
 
     def get_candidateset(self, mention):
+        self.create_conn()
+
         cur = self.conn.cursor()
         cur.execute('SELECT entity FROM '+self.table+' WHERE mention = "'+MySQLdb.escape_string(mention)+'"')
         result = cur.fetchall()
         cur.close()
+        del cur
         if result:
-            #result = [r[0][r[0].index('<')+1:r[0].index('>')] for r in result]
             result = [r[0] for r in result]
             return result
         else:
             return []
 
     def get_candidate_and_count(self, mention):
+        self.create_conn()
+
         cur = self.conn.cursor()
         cur.execute('SELECT entity,count FROM '+self.table+' WHERE mention = "'+MySQLdb.escape_string(mention)+'"')
         result = cur.fetchall()
         cur.close()
+        del cur
         if result:
             result = dict((r[0],r[1]) for r in result)
             return result
         else:
             return {}
 
-
-    def get_mentions(self):
-        cur = self.conn.cursor()
-        cur.execute('SELECT DISTINCT mention FROM '+self.table)
-        #for r in cur.fetchall():
-        #    print r
-
-        result = [r[0] for r in cur.fetchall()]
-        cur.close()
-        return result
-
     def has_mention(self,mention):
+        self.create_conn()
+
         cur = self.conn.cursor()
         cur.execute('SELECT entity FROM '+self.table+' WHERE mention = "'+mention+'"')
-        #if cur.fetchone()
         cur.close()
+        del cur
 
     def get_link_count(self, mention, entity):
+        self.create_conn()
+
         cur = self.conn.cursor()
         cur.execute('SELECT count FROM '+self.table+' WHERE mention = "'+mention+'" AND entity = "'+ entity + '"')
         r = cur.fetchone()[0]
         cur.close()
+        del cur
         return r
 
     def get_all_link_count(self, mention):
+        self.create_conn()
+
         cur = self.conn.cursor()
         cur.execute('SELECT entity,count FROM '+self.table+' WHERE mention = "'+mention+'"')
         r = dict(cur.fetchall())
         cur.close()
+        del cur
         return r
 
     def get_littleentity(self, title):
+        self.create_conn()
+
         entity = {}
         entity["_id"] = None
         entity["uri"] = None
@@ -121,6 +116,7 @@ class MySQLDB():
         cur.execute('SELECT type,super_topic,abstract,image FROM wikidb WHERE title= "'+title+'"')
         result = cur.fetchone()
         cur.close()
+        del cur
 
         entity["title"] = title
         entity["type"] = result[0]
@@ -130,10 +126,9 @@ class MySQLDB():
 
         return entity
 
-    def close(self):
-        self.conn.close()
-
     def insert_wiki_entity(self, title, super_topic, abstract,url):
+        self.create_conn()
+
         cur = self.conn.cursor()
         title = MySQLdb.escape_string(title)
         url = MySQLdb.escape_string(url)
@@ -145,6 +140,7 @@ class MySQLDB():
         cur.close()
 
     def insert_candidate(self, mention, uri, count):
+        self.create_conn()
         cur = self.conn.cursor()
         cur.execute('INSERT INTO %s (mention,entity,count) VALUES("%s","%s","%d");'%(self.table,mention,uri,count))
         MySQLDB._db.commit()
@@ -160,8 +156,8 @@ class Xlore():
     UID  = configs["user"]
     PWD  = configs["password"]
     DRIVER = configs["driver"]
-    _virtodb = pyodbc.connect('DRIVER={VOS};HOST=%s:%d;UID=%s;PWD=%s'%(HOST, PORT, UID, PWD))
-    #_virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(DRIVER, HOST, PORT, UID, PWD))
+    #_virtodb = pyodbc.connect('DRIVER={VOS};HOST=%s:%d;UID=%s;PWD=%s'%(HOST, PORT, UID, PWD))
+    _virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(DRIVER, HOST, PORT, UID, PWD))
     
     def __new__(cls, *args, **kwargs):
         if not cls._virtodb:
@@ -485,7 +481,6 @@ class Xlore():
 if __name__=="__main__":
     #db = DB()
     #db.get_candidateset("country")
-    #db.get_mentions()
     #db.has_mention("protocal")
 
     xlore = Xlore()
