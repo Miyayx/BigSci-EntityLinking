@@ -16,17 +16,17 @@ var getCsv = function(filename, res) {
 	fs.createReadStream(filename).pipe(csvConverter);
 }
 
-var page = jade.renderFile('index.jade');
 app.get('/', function(req, res) {
 
+    var page = jade.renderFile('index.jade');
 	res.send(page);
 });
 
-app.get('/author', function(req, res) {
-
-	var csvFile = "../test/new_author_hit.csv";
-	getCsv(csvFile, res);
-});
+//app.get('/author', function(req, res) {
+//
+//	var csvFile = "../test/new_author_hit.csv";
+//	getCsv(csvFile, res);
+//});
 
 app.get('/term', function(req, res) {
 	var csvFile = "../test/new_interest_hit.csv";

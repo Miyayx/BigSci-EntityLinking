@@ -1,7 +1,8 @@
 {
-    "name":"entitylinking Test",
+    "name":"entitylinking_test",
     "version":"0.0.1",
     "description":"",
+    "private":true,
     "dependencies":{
         "express":"4.6.1",
         "jade":"1.4.2",

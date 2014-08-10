@@ -22,8 +22,8 @@ $(document).ready(function() {
 		});
 		$("#total-n").text(data.length);
 		$("#hit-n").text(hitNum);
-        var rec = (hitNum*1.0)/data.length;
-        rec = rec.toFixed(4);
+		var rec = (hitNum * 1.0) / data.length;
+		rec = rec.toFixed(4);
 		$("#hit-rec").text(rec);
 		displayTable();
 		curpage = 1;
@@ -45,13 +45,19 @@ $(document).ready(function() {
 
 			var $elem = null;
 
+			//			if (d.hit) {
+			//				$elem = $('<tr><td><b>' + d.mention + '</b></td><td>' + d.title + '</td><td>' + d.type + '</td><td>' + d.super_topic + '</td><td>' + d.abstract + '</td><td>' + d.url + '</td><td><i class="icon-large icon-thumbs-up"></i>&nbsp<i class="icon-large icon-thumbs-down"></i></td></tr>');
+			//			} else {
+			//				$elem = $('<tr><td><b>' + d.mention + '</b></td><td>' + '' + '</td><td>' + '' + '</td><td>' + '' + '</td><td>' + '' + '</td><td>' + '' + '</td></tr>');
+			//				$elem.addClass('error');
+			//			}
+			//
 			if (d.hit) {
-				$elem = $('<tr><td><b>' + d.mention + '</b></td><td>' + d.title + '</td><td>' + d.type + '</td><td>' + d.super_topic + '</td><td>' + d.abstract + '</td><td>' + d.url + '</td><td><i class="icon-large icon-thumbs-up"></i>&nbsp<i class="icon-large icon-thumbs-down"></i></td></tr>');
+				$elem = $('<tr><td><b>' + d.mention + '</b></td><td>' + d.title + '</td><td>' + d.type + '</td><td>' + d.super_topic + '</td><td>' + d.abstract + '</td><td>' + d.url + '</td></tr>');
 			} else {
 				$elem = $('<tr><td><b>' + d.mention + '</b></td><td>' + '' + '</td><td>' + '' + '</td><td>' + '' + '</td><td>' + '' + '</td><td>' + '' + '</td></tr>');
 				$elem.addClass('error');
 			}
-
 			$elem.appendTo('#contents');
 		});
 	}
@@ -133,7 +139,8 @@ $(document).ready(function() {
 		if (jsondata) {
 			displayTable();
 		} else {
-			$.getJSON("/author", function(data) {
+			//$.getJSON("/author", function(data) {
+			$.getJSON("/term", function(data) {
 				jsondata = data;
 				freshPage(data);
 			});
