@@ -79,6 +79,7 @@ class LinkingResource(Resource):
         entity["super_topic"]     = e.super_topic
         entity["abstract"]  = e.abstract
         entity["image"]     = e.image
+        entity["sim"] = 0
         return entity
 
 class PageResource(Resource):
