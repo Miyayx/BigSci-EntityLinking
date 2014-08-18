@@ -187,6 +187,13 @@ class Xlore():
         #Xlore._virtodb = pyodbc.connect('DRIVER=/usr/lib64/virtodbc_r.so;HOST=%s:%d;UID=%s;PWD=%s')%(Xlore.HOST, Xlore.PORT, Xlore.UID, Xlore.PWD)
         pass
 
+    def create_conn(self):
+        if Xlore._virtodb:
+            Xlore._virtodb.close()
+        print "Create new connection"
+        Xlore._virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(Xlore.DRIVER, Xlore.HOST, Xlore.PORT, Xlore.UID, Xlore.PWD))
+        #Xlore._virtodb = pyodbc.connect('DRIVER={VOS};HOST=%s:%d;UID=%s;PWD=%s'%(Xlore.HOST, Xlore.PORT, Xlore.UID, Xlore.PWD))
+
     def fetch_one_result(self, sq):
         """
         Fetch one result from xlore virtuoso database according to query the sq string
@@ -224,13 +231,72 @@ class Xlore():
             cursor.close()
         return results
 
-    def get_concept_label(self, entity_id):
+    def get_instance_properties(self, entity_id):
+        self.create_conn()
+        sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/instance/%s> ?property ?object}'%entity_id
+        cursor = Xlore._virtodb.cursor()
+        result = {}
+        for r in cursor.execute(sq).fetchall():
+            result[r[0][0]] = result.get(r[0][0],[]) + [r[1][0]]
+        return result
+
+    def get_concept_properties(self, entity_id):
+        self.create_conn()
+        sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/concept/%s> ?property ?object}'%entity_id
+        cursor = Xlore._virtodb.cursor()
+        result = {}
+        for r in cursor.execute(sq).fetchall():
+            result[r[0][0]] = result.get(r[0][0],[]) + [r[1][0]]
+        return result
+
+    def parse_properties(self, p2o):
+        d = {}
+        for p,o in p2o.items():
+            items = p.split("/")
+            if len(items) == 5: # no enwiki,zhwiki...
+                d[items[-1]] = o
+            if len(items) == 6:
+                if not d.has_key(items[-1]):
+                    d[items[-1]] = {}
+                d[items[-1]][items[-2]] = o
+        
+        result = {}
+
+        ch_baike = ["zhwiki", "baidu", "hudong"]
+        
+        for k,v in d.items():
+            if isinstance(v, dict):
+                if k == "abstract" or k == "label":
+                    result[k] = {"en":v["enwiki"][0] if v.has_key("enwiki") else "", "ch":""}
+                    for ch in ch_baike:
+                        print ch
+                        if v.has_key(ch):
+                            result[k]["ch"] = v[ch][0]
+                            break
+                elif k == "image":
+                    result[k] = v.get("enwiki",[]) + v.get("zhwiki",[]) + v.get("hudong",[])
+                else:
+                    s_ch = set()
+                    for ch in ch_baike:
+                        for i in v.get(ch,[]):
+                            if i.startswith("http"):
+                                s_ch.add(i)
+                    s_en = set()
+                    for i in v.get("enwiki",[]):
+                        s_en.add(i)
+                    result[k] = {"en":list(s_en) if v.has_key("enwiki") else [], "ch": list(s_ch)}
+            else:
+                result[k] = v
+
+        return result
+
+    def get_concept_label(self, entity_id, lan):
         if lan == "en":
             return {"en":self.get_en_concept_label(entity_id)}
         if lan == "ch":
-            return {"ch":self.get_ch_conecpt_label(entity_id)}
+            return {"ch":self.get_ch_concept_label(entity_id)}
         if lan == "all":
-            return {"en":self.get_en_conecpt_label(entity_id),"ch":self.get_ch_conecpt_label(entity_id)}
+            return {"en":self.get_en_concept_label(entity_id),"ch":self.get_ch_concept_label(entity_id)}
     
     def get_en_concept_label(self, entity_id):
         sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/concept/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?label}'%entity_id
@@ -243,7 +309,7 @@ class Xlore():
             result = self.fetch_one_result(sq)
             if result:
                 return result
-        return None
+        return ""
 
     def get_abstract(self, entity_id, lan="en"):
         if lan == "en":
@@ -377,6 +443,12 @@ class Xlore():
                 concepts.append(label)
         return concepts
 
+    def get_title_and_image(self, entity_id,lan, n = 1):
+        title = self.get_title(entity_id,lan)
+        images = self.get_image(entity_id, n)
+        print "images",images
+        return {"title": title, "image": images[0] if len(images) > 0 else ""}
+
     def get_image(self, entity_id, n = 3):
         image_urls = []
         lore = ["enwiki","hudong","zhwiki"]
@@ -414,96 +486,31 @@ class Xlore():
         print "entity", entity
         return entity
 
-    @staticmethod
-    def get_abstract_from_web(entity_id):
-        URL = 'http://xlore.org/sparql.action' 
-        sq = 'select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/abstract> ?object }'%entity_id
-        try:
-            page = unicode(urllib2.urlopen(URL+"?sq="+quote(sq)).read(),'utf-8')
-        except:
-            page = unicode(urllib2.urlopen(URL+"?sq="+quote(sq)).read(),'utf-8')
-        soup = BeautifulSoup(page)
-        table = soup.find("table")
-        if len(table.findAll("tr")) == 1:
-            return None
-        else:
-            abstract = table.findAll("tr")[1].find("td").text.encode('utf-8')
-            return abstract
-
-    @staticmethod
-    def get_fulltext_from_web(entity_id):
-        URL = 'http://xlore.org/sparql.action' 
-        sq = 'select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/fulltext> ?e}'%entity_id
-        page = urllib2.urlopen(URL+"?sq="+quote(sq)).read()
-        soup = BeautifulSoup(page)
-        table = soup.find("table")
-        if len(table.findAll("tr")) == 1:
-            return None
-        else:
-            fulltext = table.findAll("tr")[1].find("td").text
-            return fulltext
-
-    @staticmethod
-    def get_littleentity_from_web(entity_id):
+    def create_littleentity(self, entity_id, lan):
+            
         entity = {}
-        entity["uri"] = entity_id
-        #URL = 'http://xlore.org/sparql.action' 
-        #sq = 'select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?title; <http://keg.cs.tsinghua.edu.cn/property/enwiki/abstract> ?abstract}'%entity_id
-        #page = unicode(urllib2.urlopen(URL+"?sq="+quote(sq)).read(),'utf-8')
-        #soup = BeautifulSoup(page)
-        #table = soup.find("table")
-        #if len(table.findAll("tr")) == 1:
-        #    return None
-        #else:
-        #    tds = table.findAll("tr")[1].findAll("td")
-        #    entity["title"]    = tds[0].text
-        #    entity["abstract"] = tds[1].text
-        #    images = Xlore.get_image(entity_id)
-        #    entity["image"] = images[0] if len(images) > 0 else None
-        #    return entity
+        entity_id = str(entity_id)
+        entity["_id"] = entity_id
+        entity["uri"] = PREFIX+entity_id
+        entity["url"] = XLORE_URL_PREFIX+PREFIX+entity_id
 
-        entity["title"]    = Xlore.get_title(entity_id)
-        entity["abstract"] = Xlore.get_abstract(entity_id)
-        images = Xlore.get_image(entity_id)
-        entity["image"] = images[0] if len(images) > 0 else None
-        return entity
+        q_result = self.get_instance_properties(entity_id)
+        d = self.parse_properties(q_result)
 
-    @staticmethod
-    def get_image_from_web(entity_id):
-        image_urls = []
-        lore = ["enwiki","baidu","hudong","zhwiki"]
-        URL = 'http://xlore.org/sparql.action' 
-        for l in lore:
-            sq = 'select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/image> ?img }'%(entity_id, l)
-            try:
-                page = unicode(urllib2.urlopen(URL+"?sq="+quote(sq)).read(),'utf-8')
-            except:
-                page = unicode(urllib2.urlopen(URL+"?sq="+quote(sq)).read(),'utf-8')
-            soup = BeautifulSoup(page)
-            table = soup.find("table")
-            if len(table.findAll("tr")) == 1:
-                continue
-            else:
-                image_urls += [tr.find("td").text for tr in table.findAll("tr")[1:]]
-                if len(image_urls) > 6:
-                    return image_urls
-        return image_urls
-
-    @staticmethod
-    def get_title_from_web(entity_id):
-        sq = 'select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?title}'%entity_id
-        URL = 'http://xlore.org/sparql.action' 
-        try:
-            page = unicode(urllib2.urlopen(URL+"?sq="+quote(sq)).read(),'utf-8')
-        except:
-            page = unicode(urllib2.urlopen(URL+"?sq="+quote(sq)).read(),'utf-8')
-        soup = BeautifulSoup(page)
-        table = soup.find("table")
-        if len(table.findAll("tr")) == 1:
-            return None
+        entity["title"] = d["label"]
+        entity["type"] = [self.get_concept_label(c.split("/")[-1], lan) for c in d.get("instanceOf",[]) ]
+        entity["super_topic"] = [self.get_concept_label(c.split("/")[-1], lan) for c in d.get("iSubTopicOf",[]) ]
+        if d.has_key("relatedItem"):
+            entity["related_item"] = [self.get_title_and_image(uri.split("/")[-1],"all") for uri in d["relatedItem"]["en"]]+[self.get_title_and_image(uri.split("/")[-1],"all") for uri in d["relatedItem"]["ch"]]
         else:
-            title = table.findAll("tr")[1].find("td").text
-            return title
+            entity["related_item"] = []
+        if d.has_key("abstract"):
+            entity["abstract"] = {"en":d["abstract"]["en"], "ch":d["abstract"]["ch"]}
+        else:
+            entity["abstract"] = {}
+        entity["image"] = d["image"][0:3] if d.has_key("image") else []
+        print "entity", entity
+        return entity
         
 
 if __name__=="__main__":
@@ -518,6 +525,11 @@ if __name__=="__main__":
     #print xlore.get_title(6612130)
     #print xlore.get_littleentity(1032938)
     #print xlore.get_innerLink()
-    print xlore.get_type(1039711,"all")
-    print xlore.get_superclass(1039711,"all")
+    #print xlore.get_type(1039711,"all")
+    #print xlore.get_superclass(1039711,"all")
+    #print xlore.get_all_properties(1039711)
+    #xlore.create_littleentity(1022540,"all")
+    xlore.create_littleentity(1074721,"all")
+    xlore.create_littleentity(1022540,"all")
+    xlore.create_littleentity(1756117,"all")
     

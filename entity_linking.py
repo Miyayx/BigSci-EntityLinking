@@ -171,7 +171,8 @@ class QueryEL():
                     t = l[0]
                     u = l[-1]
                     if len(u) > 0:
-                        le = self.xlore.get_littleentity(u, self.lan)
+                        #le = self.xlore.get_littleentity(u, self.lan)
+                        le = self.xlore.create_littleentity(u, self.lan)
                     else:
                         le = self.db.get_littleentity(t)
                     #if e.isdigit():
