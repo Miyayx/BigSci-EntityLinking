@@ -145,7 +145,26 @@ class MySQLDB():
         cur.execute('INSERT INTO %s (mention,entity,count) VALUES("%s","%s","%d");'%(self.table,mention,uri,count))
         MySQLDB._db.commit()
         cur.close()
-        
+
+    def insert_path(self, uri, path):
+        cur = self.conn.cursor()
+        cur.execute('INSERT INTO %s (concept_uri,path) VALUES("%s","%s");'%("super_path",uri,path))
+        self.conn.commit()
+        cur.close()
+
+    def close(self):
+        if self.conn:
+            self.conn.close()
+
+    def get_superpath(self, c_uri):
+        self.create_conn()
+        cur = self.conn.cursor()
+        print "super_path, uri =",c_uri
+        cur.execute('SELECT path FROM '+'super_path'+' WHERE concept_uri = '+c_uri)
+        result = cur.fetchone()
+        cur.close()
+        del cur
+        return result[0] if result else None
 
 class Xlore():
 
@@ -288,6 +307,15 @@ class Xlore():
             if result:
                 return result
         return None
+
+    def get_type_uri(self, entity_id):
+        c_uri = []
+        sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/instanceOf> ?type }'%entity_id
+        result = self.fetch_multi_result(sq)
+        for r in result:
+            c_e_id = r.split("/")[-1]
+            c_uri.append(c_e_id)
+        return c_uri
 
     def get_type(self, entity_id, lan="en"):
         if lan == "en":

@@ -101,7 +101,7 @@ class QueryEL():
         try:
             self.get_entity()
         except:
-            self.db.recreate()
+            self.db.create_conn()
             self.get_entity()
         if self.no_entity():
             self.queries = []

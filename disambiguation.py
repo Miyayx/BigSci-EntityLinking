@@ -23,12 +23,40 @@ class Disambiguation():
         self.threshold = 0.9
         #self.similar_cal(t, candidates)
 
+    def is_in_domain(self, c):
+        """
+        If c(uri) is in specific domain
+        """
+        domain = ['100271','104436','100262','103549','100301']
+        uris = Xlore().get_type_uri(c)
+        for u in uris:
+            if u in domain:
+                return True
+            else:
+                path = MySQLDB().get_superpath(u)
+                if not path:
+                    continue
+                for p in path.split("/"):
+                    if p in domain:
+                        return True
+        return False
+
     def domain_constrain(self):
+        """
+        Filter the candidate list with domain
+        """
+
         new_can = []
         for c in self.candidates:
-            if c in domain:
+            if self.is_in_domain(c):
+                print c,"is in domain"
                 new_can.append(c)
+
         self.candidates = new_can
+        return new_can
+
+    def remove_redirect_page(self, cs):
+        pass
 
     def get_best_use_freq(self, num = 0):
         """
@@ -39,13 +67,19 @@ class Disambiguation():
             return self.candidates
 
         can_count = MySQLDB().get_candidate_and_count(self.mention)
+        can_count = dict((k, can_count[k]) for k in self.candidates)
         for k,v in can_count.items():
             print k,v
         c_c = sorted(can_count.iteritems(), key=lambda d:d[1], reverse = True)
         if num <= 1 or not num:
-            return [c_c[0][0]]
-        else:
-            return [c[0] for c in c_c][:num]
+            num = 1
+        r = []
+        for c in c_c:
+            if self.is_in_domain(c[0]):
+                r.append(c[0])
+            if len(r) == num:
+                break
+        return r
 
     def get_best_use_title(self, num = 0):
         """
@@ -55,8 +89,6 @@ class Disambiguation():
         if len(self.candidates) == 1:
             print "Has only one candidates "
             return self.candidates
-
-        #self.domain_constrain()
 
         for c in self.candidates:
             t = Xlore().get_en_title(c)
