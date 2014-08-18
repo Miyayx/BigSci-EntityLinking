@@ -61,13 +61,23 @@ response: format:json:
                 title     : entity title,     {"en":"","ch",""}    
                 abstract  : entity abstract,  {"en":"","ch":""}
                 image     : urls of entity picture, 可以返回多个图片地址
-                sim       : value of similarity
+                type      :[{"en":"","ch":""},...] list of super class, only title
+                super_topic      :[{"en":"","ch":""},...] list of super topic, only title
+                related_item:[
+                             {"image":"",
+                              "title":{
+                                  "en":"",
+                                  "ch":""}
+                                  },...]         list of related_item, title and image
+                #sim       : value of similarity ！！不要了
             },{
                 ...
             },...
         ]
     }
 
+
+Query Demo:
 """
 
 URL = 'http://localhost:5656/linking'
@@ -124,8 +134,8 @@ def querylog_test(logfn, hitfile=None, statisfile=None):
     hit_uri = []
     if hitfile:
         hitf = open(hitfile,"w")
-        #hitf.write("mention,hit,title,type,super_topic,abstract,url\n")
-        hitf.write("mention,hit,title,abstract,url\n")
+        hitf.write("mention,hit,title,type,super_topic,abstract,url\n")
+        #hitf.write("mention,hit,title,abstract,url\n")
     if statisfile:
         statisf = open(statisfile,"w")
     #result_file = open("./data/querylog_test_hit_result.dat","w")
@@ -156,14 +166,14 @@ def querylog_test(logfn, hitfile=None, statisfile=None):
                 except Exception, er:
                     print er
                     print  j["entity"][0]["title"]["en"]
-                #if j["entity"][0]["type"]["en"]:
-                #    hitf.write("#".join(j["entity"][0]["type"]["en"]).encode("utf-8")+CSV_DELIMITER)
-                #else:
-                #    hitf.write(""+CSV_DELIMITER)
-                #if j["entity"][0]["super_topic"]["en"]:
-                #    hitf.write("#".join(j["entity"][0]["super_topic"]["en"])+CSV_DELIMITER)
-                #else:
-                #    hitf.write(""+CSV_DELIMITER)
+                if j["entity"][0]["type"] and j["entity"][0]["type"]["en"]:
+                    hitf.write("#".join(j["entity"][0]["type"]["en"]).encode("utf-8")+CSV_DELIMITER)
+                else:
+                    hitf.write(""+CSV_DELIMITER)
+                if j["entity"][0]["super_topic"] and j["entity"][0]["super_topic"]["en"]:
+                    hitf.write("#".join(j["entity"][0]["super_topic"]["en"])+CSV_DELIMITER)
+                else:
+                    hitf.write(""+CSV_DELIMITER)
                 if j["entity"][0]["abstract"]["en"]:
                     hitf.write(j["entity"][0]["abstract"]["en"].replace(",",".").encode("utf-8")+CSV_DELIMITER)
                 else:
@@ -224,13 +234,16 @@ if __name__=="__main__":
 
     #querylog_test("./data/query_keywords.dat")
     #querylog_test("./data/results/mention/Ner/1016.page")
-    #querylog_test("./data/all_interest.dat")
+    querylog_test("./data/arnet_interest.dat")
     #querylog_test("./data/interest.dat","./test/interest_hit.csv","./test/interest_statis.dat")
     #querylog_test("./data/author_100.dat","./test/author_100_hit.csv","./test/author_100_statis.dat")
 
-    querylog_test("./data/arnet_interest.dat","./test/new_interest_hit.csv","./test/new_interest_stat.dat")
+    #querylog_test("./data/arnet_interest.dat","./test/interest_hit_domain.csv","./test/interest_stat_domain.dat")
+    #querylog_test("./data/arnet_interest.dat","./test/interest_hit_domain_new.csv","./test/interest_stat_domain_new.dat")
     #querylog_test("./data/arnet_author.dat","./test/new_author_hit.csv","./test/new_author_stat.dat")
-    #querylog_test("./data/paper_title.dat","./test/new_pub_hit.csv","./test/new_pub_stat.dat")
+    #querylog_test("./data/paper_title.dat","./test/new_pub_hit2.csv","./test/new_pub_stat2.dat")
+    #querylog_test("./data/paper_title.dat","./test/new_pub_hit3.csv","./test/new_pub_stat3.dat")
+    #querylog_test("./data/query_keywords.dat","./test/querylog_hit.csv","./test/querylog_stat.dat")
 
     #for q in ['machine learning','data structure','data mining','Computer architecture']:
     #for q in ['data mining and machine learning',]:
