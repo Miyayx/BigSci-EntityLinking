@@ -39,6 +39,10 @@ app.get('/paper', function(req, res) {
 	getCsv(csvFile, res);
 });
 
+app.get('/dm-term', function(req, res) {
+	var csvFile = "../test/terms_hit.csv";
+	getCsv(csvFile, res);
+});
 app.use(express.static(path.join(__dirname, './')));
 app.listen(3000);
 

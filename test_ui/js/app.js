@@ -103,6 +103,11 @@ $(document).ready(function() {
 				freshPage(data);
 			});
 		});
+		$("#dm-term").click(function() {
+			$.getJSON("/dm-term", function(data) {
+				freshPage(data);
+			});
+		});
 	}
 
 	var displayPager = function() {
