@@ -166,17 +166,30 @@ def querylog_test(logfn, hitfile=None, statisfile=None):
                 except Exception, er:
                     print er
                     print  j["entity"][0]["title"]["en"]
-                if j["entity"][0]["type"] and j["entity"][0]["type"]["en"]:
-                    hitf.write("#".join(j["entity"][0]["type"]["en"]).encode("utf-8")+CSV_DELIMITER)
+                if j["entity"][0]["type"]:
+                    types = j["entity"][0]["type"]
+                    ens = "en"
+                    chs = "ch"
+                    for t in types:
+                        ens += ("#"+t["en"] if t["en"] else "")
+                        chs += ("#"+t["ch"] if t["ch"] else "")
+                    hitf.write(ens.encode("utf-8") + "###"+ chs.encode("utf-8") +CSV_DELIMITER)
                 else:
                     hitf.write(""+CSV_DELIMITER)
-                if j["entity"][0]["super_topic"] and j["entity"][0]["super_topic"]["en"]:
-                    hitf.write("#".join(j["entity"][0]["super_topic"]["en"])+CSV_DELIMITER)
+                if j["entity"][0]["super_topic"]:
+                    topics = j["entity"][0]["super_topic"]
+                    ens = "en"
+                    chs = "ch"
+                    for t in topics:
+                        ens += ("#"+t["en"] if t["en"] else "")
+                        chs += ("#"+t["ch"] if t["ch"] else "")
+                    hitf.write(ens.encode("utf-8") + "###"+ chs.encode("utf-8") +CSV_DELIMITER)
                 else:
                     hitf.write(""+CSV_DELIMITER)
-                if j["entity"][0]["abstract"]["en"]:
+                if j["entity"][0]["abstract"].has_key("en"):
                     hitf.write(j["entity"][0]["abstract"]["en"].replace(",",".").encode("utf-8")+CSV_DELIMITER)
                 else:
+                    print j["entity"][0]["title"]
                     hitf.write(""+CSV_DELIMITER)
                 hitf.write(j["entity"][0]["url"]+"\n")
     #        result_file.write(keyword+"\n")
@@ -234,7 +247,7 @@ if __name__=="__main__":
 
     #querylog_test("./data/query_keywords.dat")
     #querylog_test("./data/results/mention/Ner/1016.page")
-    querylog_test("./data/arnet_interest.dat")
+    #querylog_test("./data/arnet_interest.dat")
     #querylog_test("./data/interest.dat","./test/interest_hit.csv","./test/interest_statis.dat")
     #querylog_test("./data/author_100.dat","./test/author_100_hit.csv","./test/author_100_statis.dat")
 
@@ -244,6 +257,7 @@ if __name__=="__main__":
     #querylog_test("./data/paper_title.dat","./test/new_pub_hit2.csv","./test/new_pub_stat2.dat")
     #querylog_test("./data/paper_title.dat","./test/new_pub_hit3.csv","./test/new_pub_stat3.dat")
     #querylog_test("./data/query_keywords.dat","./test/querylog_hit.csv","./test/querylog_stat.dat")
+    querylog_test("./data/terms.dat","./test/terms_hit.csv","./test/terms_stat.dat")
 
     #for q in ['machine learning','data structure','data mining','Computer architecture']:
     #for q in ['data mining and machine learning',]:

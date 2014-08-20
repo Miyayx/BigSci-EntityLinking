@@ -507,7 +507,7 @@ class Xlore():
         if d.has_key("abstract"):
             entity["abstract"] = {"en":d["abstract"]["en"], "ch":d["abstract"]["ch"]}
         else:
-            entity["abstract"] = {}
+            entity["abstract"] = {"en":"","ch":""}
         entity["image"] = d["image"][0:3] if d.has_key("image") else []
         print "entity", entity
         return entity
