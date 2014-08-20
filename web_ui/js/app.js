@@ -12,12 +12,35 @@ $(document).ready(function() {
 					if (typeof v == "object") {
 						trs = []
 						$.each(v, function(k1, v1) {
-							trs.push('<tr><td><b>');
-							trs.push(k + '.' + k1);
-							trs.push('</b></td><td>');
-							trs.push(v1);
-							trs.push('</td></tr>');
-						})
+							if (typeof v1 == "object") {
+								$.each(v1, function(k2, v2) {
+
+									if (typeof v2 == "object") {
+										$.each(v2, function(k3, v3) {
+											trs.push('<tr><td><b>');
+											trs.push(k + '.' + k1 + '.' + k2 + '.' + k3);
+											trs.push('</b></td><td>');
+											trs.push(v3);
+											trs.push('</td></tr>');
+										});
+									} else {
+										trs.push('<tr><td><b>');
+										trs.push(k + '.' + k1 + '.' + k2);
+										trs.push('</b></td><td>');
+										trs.push(v2);
+										trs.push('</td></tr>');
+									}
+
+								});
+
+							} else {
+								trs.push('<tr><td><b>');
+								trs.push(k + '.' + k1);
+								trs.push('</b></td><td>');
+								trs.push(v1);
+								trs.push('</td></tr>');
+							}
+						});
 						$elem = $(trs.join(""));
 					} else {
 						if (typeof v == "string" && (v.indexOf("http") > - 1 || v.indexOf("https") > - 1)) {
@@ -47,7 +70,7 @@ $(document).ready(function() {
 		}).done(function(data) {
 			spinner.stop();
 			displayTable(data);
-            $("#query").val("");
+			$("#query").val("");
 		});
 	}
 
