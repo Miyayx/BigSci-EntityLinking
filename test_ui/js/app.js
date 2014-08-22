@@ -108,6 +108,11 @@ $(document).ready(function() {
 				freshPage(data);
 			});
 		});
+		$("#term-200").click(function() {
+			$.getJSON("/term-200", function(data) {
+				freshPage(data);
+			});
+		});
 	}
 
 	var displayPager = function() {

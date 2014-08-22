@@ -43,6 +43,10 @@ app.get('/dm-term', function(req, res) {
 	var csvFile = "../test/terms_hit.csv";
 	getCsv(csvFile, res);
 });
+app.get('/term-200', function(req, res) {
+	var csvFile = "../test/200_terms_hit.csv";
+	getCsv(csvFile, res);
+});
 app.use(express.static(path.join(__dirname, './')));
 app.listen(3000);
 

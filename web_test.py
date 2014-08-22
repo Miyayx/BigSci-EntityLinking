@@ -162,7 +162,7 @@ def querylog_test(logfn, hitfile=None, statisfile=None):
                 hitf.write(keyword+CSV_DELIMITER)
                 hitf.write("Hit"+CSV_DELIMITER)
                 try:
-                    hitf.write(j["entity"][0]["title"]["en"].replace(",",".").encode("utf-8")+CSV_DELIMITER)
+                    hitf.write((j["entity"][0]["title"]["en"].replace(",",".") + ";;;" +j["entity"][0]["title"]["ch"]).encode("utf-8")+CSV_DELIMITER)
                 except Exception, er:
                     print er
                     print  j["entity"][0]["title"]["en"]
@@ -187,11 +187,12 @@ def querylog_test(logfn, hitfile=None, statisfile=None):
                 else:
                     hitf.write(""+CSV_DELIMITER)
                 if j["entity"][0]["abstract"].has_key("en"):
-                    hitf.write(j["entity"][0]["abstract"]["en"].replace(",",".").encode("utf-8")+CSV_DELIMITER)
+                    hitf.write((j["entity"][0]["abstract"]["en"].replace(",",".") + ";;;" +j["entity"][0]["abstract"]["ch"]).encode("utf-8") +CSV_DELIMITER)
                 else:
                     print j["entity"][0]["title"]
                     hitf.write(""+CSV_DELIMITER)
-                hitf.write(j["entity"][0]["url"]+"\n")
+                #hitf.write(j["entity"][0]["url"]+"\n")
+                hitf.write(" "+"\n")
     #        result_file.write(keyword+"\n")
     #        result_file.write(r+"\n")
     #        result_file.write("\n")
@@ -257,7 +258,8 @@ if __name__=="__main__":
     #querylog_test("./data/paper_title.dat","./test/new_pub_hit2.csv","./test/new_pub_stat2.dat")
     #querylog_test("./data/paper_title.dat","./test/new_pub_hit3.csv","./test/new_pub_stat3.dat")
     #querylog_test("./data/query_keywords.dat","./test/querylog_hit.csv","./test/querylog_stat.dat")
-    querylog_test("./data/terms.dat","./test/terms_hit.csv","./test/terms_stat.dat")
+    #querylog_test("./data/terms.dat","./test/terms_hit.csv","./test/terms_stat.dat")
+    querylog_test("./data/200_terms.dat","./test/200_terms_hit.csv","./test/200_terms_stat.dat")
 
     #for q in ['machine learning','data structure','data mining','Computer architecture']:
     #for q in ['data mining and machine learning',]:
