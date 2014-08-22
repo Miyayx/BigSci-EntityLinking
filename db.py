@@ -269,7 +269,7 @@ class Xlore():
                 if k == "abstract" or k == "label":
                     result[k] = {"en":v["enwiki"][0] if v.has_key("enwiki") else "", "ch":""}
                     for ch in ch_baike:
-                        print ch
+                        print k,ch
                         if v.has_key(ch):
                             result[k]["ch"] = v[ch][0]
                             break

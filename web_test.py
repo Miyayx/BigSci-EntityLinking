@@ -162,7 +162,7 @@ def querylog_test(logfn, hitfile=None, statisfile=None):
                 hitf.write(keyword+CSV_DELIMITER)
                 hitf.write("Hit"+CSV_DELIMITER)
                 try:
-                    hitf.write((j["entity"][0]["title"]["en"].replace(",",".") + ";;;" +j["entity"][0]["title"]["ch"]).encode("utf-8")+CSV_DELIMITER)
+                    hitf.write((j["entity"][0]["title"]["en"].replace(",",".") + ";;;" +j["entity"][0]["title"]["ch"].replace(",",".")).encode("utf-8")+CSV_DELIMITER)
                 except Exception, er:
                     print er
                     print  j["entity"][0]["title"]["en"]
@@ -171,8 +171,8 @@ def querylog_test(logfn, hitfile=None, statisfile=None):
                     ens = "en"
                     chs = "ch"
                     for t in types:
-                        ens += ("#"+t["en"] if t["en"] else "")
-                        chs += ("#"+t["ch"] if t["ch"] else "")
+                        ens += ("#"+t["en"].replace(",",".") if t["en"] else "")
+                        chs += ("#"+t["ch"].replace(",",".") if t["ch"] else "")
                     hitf.write(ens.encode("utf-8") + "###"+ chs.encode("utf-8") +CSV_DELIMITER)
                 else:
                     hitf.write(""+CSV_DELIMITER)
@@ -181,13 +181,13 @@ def querylog_test(logfn, hitfile=None, statisfile=None):
                     ens = "en"
                     chs = "ch"
                     for t in topics:
-                        ens += ("#"+t["en"] if t["en"] else "")
-                        chs += ("#"+t["ch"] if t["ch"] else "")
+                        ens += ("#"+t["en"].replace(",",".") if t["en"] else "")
+                        chs += ("#"+t["ch"].replace(",",".") if t["ch"] else "")
                     hitf.write(ens.encode("utf-8") + "###"+ chs.encode("utf-8") +CSV_DELIMITER)
                 else:
                     hitf.write(""+CSV_DELIMITER)
                 if j["entity"][0]["abstract"].has_key("en"):
-                    hitf.write((j["entity"][0]["abstract"]["en"].replace(",",".") + ";;;" +j["entity"][0]["abstract"]["ch"]).encode("utf-8") +CSV_DELIMITER)
+                    hitf.write((j["entity"][0]["abstract"]["en"].replace(",",".") + ";;;" +j["entity"][0]["abstract"]["ch"].replace(",",".")).encode("utf-8") +CSV_DELIMITER)
                 else:
                     print j["entity"][0]["title"]
                     hitf.write(""+CSV_DELIMITER)
