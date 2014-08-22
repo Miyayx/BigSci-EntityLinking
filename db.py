@@ -285,7 +285,7 @@ class Xlore():
                         print k,ch
                         if v.has_key(ch):
                             import re
-                            rs = [r'\(.*?:\s*?\)',r'（.*?：\s*?）',r'(\s*?)',r'（\s*?）'] 
+                            rs = [r'\(.*?:\s*?\)',r'（.*?：\s*?）',r'(\s*?)',r'（\s*?）',r'（.*?,\s*?）',r'（.*?，\s*?）'] 
                             for r in rs:
                                 v[ch][0] = re.sub(r,"",v[ch][0])
                             result[k]["ch"] = v[ch][0]
