@@ -67,7 +67,10 @@ class Disambiguation():
             return self.candidates
 
         can_count = MySQLDB().get_candidate_and_count(self.mention)
-        can_count = dict((k, can_count[k]) for k in self.candidates if can_count[k] > 1)
+        new_can_count = dict((k, can_count[k]) for k in self.candidates if can_count[k] > 1)
+
+        if len(new_can_count) > 0:
+            can_count = new_can_count
 
         for k,v in can_count.items():
             print k,v

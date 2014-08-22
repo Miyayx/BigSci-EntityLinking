@@ -262,7 +262,7 @@ class Xlore():
         
         result = {}
 
-        ch_baike = ["zhwiki", "baidu", "hudong"]
+        ch_baike = [ "baidu","zhwiki","hudong"]
         
         for k,v in d.items():
             if isinstance(v, dict):

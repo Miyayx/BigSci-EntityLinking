@@ -113,6 +113,13 @@ class QueryEL():
             if self.no_entity() and w_num >= 3 and w_num <=5: # split query string into short substring
                 print "Split Query string"
                 self.split_querystr()
+
+                if "-" in self.query_str:
+                    for q in self.query_str.split():
+                        if "-" in q:
+                            self.queries.append(Query(q, 0, 0))
+                            break
+
                 self.get_entity()
 
     def set_db(self, db):
@@ -145,9 +152,10 @@ class QueryEL():
         Get sub query strings according to truncate the origin string
         """
         ws = self.query_str.split()
-        for i in range(1,len(ws)-1):
-            new_query = " ".join(ws[i:])
-            self.queries.append(Query(new_query, 0, 0))
+        for i in range(0,len(ws)-2):
+            for j in range(2,len(ws)):
+                new_query = " ".join(ws[i:j])
+                self.queries.append(Query(new_query, 0, 0))
 
     def get_entity(self):
         candidates = []
