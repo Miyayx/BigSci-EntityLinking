@@ -108,21 +108,33 @@ class MySQLDB():
         self.create_conn()
 
         entity = {}
-        entity["_id"] = None
-        entity["uri"] = None
-        entity["url"] = "http://en.wikipedia.org/wiki/"+title.split().join("_")
+        entity["_id"] = ""
+        entity["uri"] = ""
+        entity["url"] = "http://en.wikipedia.org/wiki/"+"_".join(title.split())
 
         cur = self.conn.cursor()
-        cur.execute('SELECT type,super_topic,abstract,image FROM wikidb WHERE title= "'+title+'"')
+        cur.execute('SELECT type,super_topic,abstract,image FROM wiki_db WHERE title= "'+MySQLdb.escape_string(title)+'"')
         result = cur.fetchone()
         cur.close()
         del cur
 
-        entity["title"] = title
-        entity["type"] = result[0]
-        entity["super_topic"] = result[1]
-        entity["abstract"] = result[2]
-        entity["image"] = result[3]
+        if not result:
+            return None
+
+        entity["title"] = {"en":title,"ch":""}
+        if result[0]:
+            entity["type"] = [{"en":r,"ch":""} for r in result[0].split(";")]
+        else:
+            entity["type"] = []
+        if result[1]:
+            entity["super_topic"] = [{"en":r,"ch":""} for r in result[1].split(";")]
+        else:
+            entity["super_topic"] = []
+        entity["abstract"] = {"en":result[2] if result[2] else "","ch":""}
+        entity["image"] = []
+        entity["related_item"] = []
+
+        print "Entity:",entity
 
         return entity
 
@@ -262,7 +274,8 @@ class Xlore():
         
         result = {}
 
-        ch_baike = [ "baidu","zhwiki","hudong"]
+        #ch_baike = [ "baidu","zhwiki","hudong"]
+        ch_baike = ["zhwiki","baidu","hudong"]
         
         for k,v in d.items():
             if isinstance(v, dict):
@@ -271,6 +284,10 @@ class Xlore():
                     for ch in ch_baike:
                         print k,ch
                         if v.has_key(ch):
+                            import re
+                            rs = [r'\(.*?:\s*?\)',r'（.*?：\s*?）',r'(\s*?)',r'（\s*?）'] 
+                            for r in rs:
+                                v[ch][0] = re.sub(r,"",v[ch][0])
                             result[k]["ch"] = v[ch][0]
                             break
                 elif k == "image":

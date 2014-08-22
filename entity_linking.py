@@ -163,7 +163,7 @@ class QueryEL():
             print "Query String:",q.text
             candidates = self.db.get_candidateset(q.text)
             print "length of candidates",len(candidates)
-            if candidates:
+            if candidates and len(candidates) > 0:
                 print candidates
                 if self.text and len(self.text) > 0:
                     #If section context exists
@@ -189,6 +189,13 @@ class QueryEL():
                     #    le = self.db.get_littleentity(e)
 
                     self.entities.append(LittleEntity(**le))
+            else:
+                print "Search From MySQL"
+                le = self.db.get_littleentity(q.text)
+                print le
+                if le:
+                    self.entities.append(LittleEntity(**le))
+
 
 def loadCandidateSet():
     global Candidateset
