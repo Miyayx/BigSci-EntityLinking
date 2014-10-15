@@ -9,14 +9,12 @@ import urllib2
 from urllib import quote
 
 from utils import *
+from virtdb import *
 
-XLORE_URL="http://xlore.org/sigInfo.action"
-XLORE_URL_PREFIX="http://xlore.org/sigInfo.action?uri="
-PREFIX = "http://keg.cs.tsinghua.edu.cn/instance/"
 
 class MySQLDB():
 
-    configs = ConfigTool.parse_config("db.cfg","MySQL")
+    configs = ConfigTool.parse_config("./config/db.cfg","MySQL")
     print "configs:",configs
     HOST   = configs["host"]
     PORT   = int(configs["port"])
@@ -178,87 +176,38 @@ class MySQLDB():
         del cur
         return result[0] if result else None
 
+XLORE_URL="http://xlore.org/sigInfo.action"
+XLORE_URL_PREFIX="http://xlore.org/sigInfo.action?uri="
+PREFIX = "http://keg.cs.tsinghua.edu.cn"
+GRAPH = 'lore4'
+
 class Xlore():
 
-    configs = ConfigTool.parse_config("db.cfg","Xlore")
-    print "configs:",configs
-    HOST = configs["host"]
-    PORT = int(configs["port"])
-    UID  = configs["user"]
-    PWD  = configs["password"]
-    DRIVER = configs["driver"]
-    #_virtodb = pyodbc.connect('DRIVER={VOS};HOST=%s:%d;UID=%s;PWD=%s'%(HOST, PORT, UID, PWD))
-    _virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(DRIVER, HOST, PORT, UID, PWD))
     
-    def __new__(cls, *args, **kwargs):
-        if not cls._virtodb:
-            cls._virtodb = super(Xlore, cls).__new__(cls, *args, **kwargs)
-        return cls._virtodb
-
     def __init__(self):
-        #Xlore._virtodb = pyodbc.connect('DRIVER=/usr/lib64/virtodbc_r.so;HOST=%s:%d;UID=%s;PWD=%s')%(Xlore.HOST, Xlore.PORT, Xlore.UID, Xlore.PWD)
-        pass
-
-    def create_conn(self):
-        if Xlore._virtodb:
-            Xlore._virtodb.close()
-        print "Create new connection"
-        Xlore._virtodb = pyodbc.connect('DRIVER=%s;HOST=%s:%d;UID=%s;PWD=%s'%(Xlore.DRIVER, Xlore.HOST, Xlore.PORT, Xlore.UID, Xlore.PWD))
-        #Xlore._virtodb = pyodbc.connect('DRIVER={VOS};HOST=%s:%d;UID=%s;PWD=%s'%(Xlore.HOST, Xlore.PORT, Xlore.UID, Xlore.PWD))
-
-    def fetch_one_result(self, sq):
-        """
-        Fetch one result from xlore virtuoso database according to query the sq string
-
-        return:
-            one result(if hits) or None(if no hit)
-        """
-        cursor = Xlore._virtodb.cursor()
-        results = cursor.execute(sq)
-        try:
-            result = results.fetchone()[0]
-            if type(result) == tuple:
-                result = result[0]
-        except TypeError,e:
-            return None
-        finally:
-            cursor.close()
-        return result
-
-    def fetch_multi_result(self, sq):
-        """
-        Fetch multi results from xlore virtuoso database according to query the sq string
-
-        return:
-            result list(if hits) or empty list(if no hit)
-        """
-        cursor = Xlore._virtodb.cursor()
-        try:
-            results = [r[0] for r in cursor.execute(sq).fetchall()]
-            if results and len(results) > 0 and type(results[0]) == tuple:
-                results = [r[0] for r in results]
-        except TypeError,e:
-            return []
-        finally:
-            cursor.close()
-        return results
+        configs = ConfigTool.parse_config("./config/db.cfg","XLore")
+        import sys
+        if re.match('linux',sys.platform):#Linux
+            #self.db = JenaVirtDB(**configs)
+            self.db = OdbcVirtDB(**configs)
+        else:
+            self.db = OdbcVirtDB(**configs)
+        GRAPH = configs['graph']
 
     def get_instance_properties(self, entity_id):
-        self.create_conn()
-        sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/instance/%s> ?property ?object}'%entity_id
-        cursor = Xlore._virtodb.cursor()
+        sq = 'select * from <%s> where {<%s/instance/%s> ?p ?o}'%(GRAPH, PREFIX, entity_id)
+        result_set = self.db.query(sq)
         result = {}
-        for r in cursor.execute(sq).fetchall():
-            result[r[0][0]] = result.get(r[0][0],[]) + [r[1][0]]
+        for p, o in result_set:
+            result[p] = result.get(p,[]) + [o]
         return result
 
     def get_concept_properties(self, entity_id):
-        self.create_conn()
-        sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/concept/%s> ?property ?object}'%entity_id
-        cursor = Xlore._virtodb.cursor()
+        sq = 'select * from <%s> where {<%s/concept/%s> ?p ?o}'%(GRAPH, PREFIX, entity_id)
+        result_set = self.db.query(sq)
         result = {}
-        for r in cursor.execute(sq).fetchall():
-            result[r[0][0]] = result.get(r[0][0],[]) + [r[1][0]]
+        for p, o in result_set:
+            result[p] = result.get(p,[]) + [o]
         return result
 
     def parse_properties(self, p2o):
@@ -274,7 +223,6 @@ class Xlore():
         
         result = {}
 
-        #ch_baike = [ "baidu","zhwiki","hudong"]
         ch_baike = ["zhwiki","baidu","hudong"]
         
         for k,v in d.items():
@@ -316,14 +264,14 @@ class Xlore():
             return {"en":self.get_en_concept_label(entity_id),"ch":self.get_ch_concept_label(entity_id)}
     
     def get_en_concept_label(self, entity_id):
-        sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/concept/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?label}'%entity_id
-        return self.fetch_one_result(sq)
+        sq = 'select * from <%s> where {<%s/concept/%s> <%s/property/enwiki/label> ?label}'%(GRAPH, PREFIX, entity_id, PREFIX)
+        return self.db.fetch_one_result(sq)
 
     def get_ch_concept_label(self, entity_id):
         ch_baike = ["zhwiki", "baidu", "hudong"]
         for ch in ch_baike:
-            sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/concept/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/label> ?label}'%(entity_id,ch)
-            result = self.fetch_one_result(sq)
+            sq = 'select * from <%s> where {<%s/concept/%s> <%s/property/%s/label> ?label}'%(GRAPH, PREFIX, entity_id, PREFIX, ch)
+            result = self.db.fetch_one_result(sq)
             if result:
                 return result
         return ""
@@ -337,14 +285,14 @@ class Xlore():
             return {"en":self.get_en_abstract(entity_id),"ch":self.get_ch_abstract(entity_id)}
 
     def get_en_abstract(self, entity_id):
-        sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/abstract> ?object }'%entity_id
-        return self.fetch_one_result(sq)
+        sq = 'select * from <%s> where {<%s/instance/%s> <%s/property/enwiki/abstract> ?o }'%(GRAPH, PREFIX, entity_id, PREFIX)
+        return self.db.fetch_one_result(sq)
 
     def get_ch_abstract(self, entity_id):
         ch_baike = ["zhwiki", "baidu", "hudong"]
         for ch in ch_baike:
-            sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/abstract> ?title}'%(entity_id,ch)
-            result = self.fetch_one_result(sq)
+            sq = 'select * from <%s> where {<%s/instance/%s> <%s/property/%s/abstract> ?title}'%(GRAPH, PREFIX, entity_id, PREFIX, ch)
+            result = self.db.fetch_one_result(sq)
             if result:
                 return result
         return None
@@ -358,14 +306,14 @@ class Xlore():
             return {"en":self.get_en_title(entity_id),"ch":self.get_ch_title(entity_id)}
 
     def get_en_title(self, entity_id):
-        sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?title}'%entity_id
-        return self.fetch_one_result(sq)
+        sq = 'select * from <%s> where {<%s/instance/%s> <%s/property/enwiki/label> ?title}'%(GRAPH, PREFIX, entity_id, PREFIX)
+        return self.db.fetch_one_result(sq)
 
     def get_ch_title(self, entity_id):
         ch_baike = ["zhwiki", "baidu", "hudong"]
         for ch in ch_baike:
-            sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/label> ?title}'%(entity_id,ch)
-            result = self.fetch_one_result(sq)
+            sq = 'select * from <%s> where {<%s/instance/%s> <%s/property/%s/label> ?title}'%(GRAPH, PREFIX, entity_id, PREFIX, ch)
+            result = self.db.fetch_one_result(sq)
             if result:
                 return result
         return None
@@ -379,21 +327,21 @@ class Xlore():
             return {"en":self.get_en_fulltext(entity_id),"ch":self.get_ch_fulltext(entity_id)}
 
     def get_en_fulltext(self, entity_id):
-        sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/fulltext> ?object }'%entity_id
-        return self.fetch_one_result(sq)
+        sq = 'select * from <%s> where {<%s/instance/%s> <%s/property/enwiki/fulltext> ?object }'%(GRAPH, PREFIX, entity_id, PREFIX)
+        return self.db.fetch_one_result(sq)
 
     def get_ch_fulltext(self, entity_id):
         ch_baike = ["zhwiki", "baidu", "hudong"]
         for ch in ch_baike:
-            sq = 'sparql select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/fulltext> ?e}'%(entity_id,ch)
-            result = self.fetch_one_result(sq)
+            sq = 'select * from <%s> where { <%s/instance/%s> <%s/property/%s/fulltext> ?e}'%(GRAPH, PREFIX, entity_id, PREFIX, ch)
+            result = self.db.fetch_one_result(sq)
             if result:
                 return result
         return None
 
     def get_type_uri(self, entity_id):
         c_uri = []
-        sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/instanceOf> ?type }'%entity_id
+        sq = 'select * from <%s> where {<%s/instance/%s> <%s/property/instanceOf> ?type }'%( GRAPH, PREFIX, entity_id, PREFIX)
         result = self.fetch_multi_result(sq)
         for r in result:
             c_e_id = r.split("/")[-1]
@@ -410,8 +358,8 @@ class Xlore():
 
     def get_en_type(self, entity_id):
         concepts = []
-        sq = 'sparql select * from <lore4> where {<http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/instanceOf> ?type }'%entity_id
-        result = self.fetch_multi_result(sq)
+        sq = 'select * from <%s> where {<%s/instance/%s> <%s/property/instanceOf> ?type }'%(GRAPH, PREFIX, entity_id, PREFIX)
+        result = self.db.fetch_multi_result(sq)
         for r in result:
             c_e_id = r.split("/")[-1]
             label = self.get_en_concept_label(c_e_id)
@@ -421,8 +369,8 @@ class Xlore():
 
     def get_ch_type(self, entity_id):
         concepts = []
-        sq = 'sparql select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/instanceOf> ?type}'%(entity_id)
-        result = (self.fetch_multi_result(sq))
+        sq = 'select * from <%s> where { <%s/instance/%s> <%s/property/instanceOf> ?type}'%(GRAPH, PREFIX, entity_id, PREFIX)
+        result = (self.db.fetch_multi_result(sq))
         for r in result:
             c_e_id = r.split("/")[-1]
             label = self.get_ch_concept_label(c_e_id)
@@ -440,8 +388,8 @@ class Xlore():
 
     def get_en_superclass(self, entity_id):
         concepts = []
-        sq = 'sparql select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/iSubTopicOf> ?t }'%entity_id
-        result = self.fetch_multi_result(sq)
+        sq = 'select * from <%s> where { <%s/instance/%s> <%s/property/iSubTopicOf> ?t }'%(GRAPH, PREFIX, entity_id, PREFIX)
+        result = self.db.fetch_multi_result(sq)
         for r in result:
             c_e_id = r.split("/")[-1]
             label = self.get_en_concept_label(c_e_id)
@@ -451,8 +399,8 @@ class Xlore():
 
     def get_ch_superclass(self, entity_id):
         concepts = []
-        sq = 'sparql select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/iSubTopicOf> ?t}'%(entity_id)
-        result = self.fetch_multi_result(sq)
+        sq = 'select * from <%s> where { <%s/instance/%s> <%s/property/iSubTopicOf> ?t}'%(GRAPH, PREFIX, entity_id, PREFIX)
+        result = self.db.fetch_multi_result(sq)
         for r in result:
             c_e_id = r.split("/")[-1]
             label = self.get_ch_concept_label(c_e_id)
@@ -470,30 +418,22 @@ class Xlore():
         image_urls = []
         lore = ["enwiki","hudong","zhwiki"]
         for l in lore:
-            sq = 'sparql select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/%s/image> ?img }'%(entity_id, l)
-            image_urls += self.fetch_multi_result(sq)
+            sq = 'select * from <%s> where { <%s/instance/%s> <%s/property/%s/image> ?img }'%(GRAPH, PREFIX, entity_id, PREFIX, l)
+            image_urls += self.db.fetch_multi_result(sq)
             if len(image_urls) > n:
                 break
         return image_urls[:n] if len(image_urls) >= 3 else image_urls
 
     def get_innerLink(self, entity_id):
 
-        sq = 'sparql select * from <lore4> where { <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/innerLink> ?link}'%entity_id
-        return self.fetch_multi_result(sq)
+        sq = 'select * from <%s> where { <%s/instance/%s> <%s/property/enwiki/innerLink> ?link}'%(GRAPH, PREFIX, entity_id, PREFIX)
+        return self.db.fetch_multi_result(sq)
 
     def get_littleentity(self, entity_id, lan):
         entity = {}
         entity["_id"] = entity_id
         entity["uri"] = PREFIX+entity_id
         entity["url"] = XLORE_URL_PREFIX+PREFIX+entity_id
-
-        #cursor = Xlore._virtodb.cursor()
-        #sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s> <http://keg.cs.tsinghua.edu.cn/property/enwiki/label> ?title}'%entity_id
-        #entity["title"] = cursor.execute(sq).fetchone()[0][0]
-
-        #sq = 'sparql select * from <lore4> where{ <http://keg.cs.tsinghua.edu.cn/instance/%s>  <http://keg.cs.tsinghua.edu.cn/property/enwiki/abstract> ?object }'%entity_id
-        #a = cursor.execute(sq).fetchone()
-        #entity["abstract"] = a[0][0] if a else None
 
         entity["title"] = self.get_title(entity_id, lan)
         entity["type"] = self.get_type(entity_id, lan)
@@ -536,16 +476,14 @@ if __name__=="__main__":
     #db.has_mention("protocal")
 
     xlore = Xlore()
-    #print xlore.get_image(1032938)
-    #print xlore.get_abstract(1032938)
-    #print xlore.get_fulltext(1032938)
-    #print xlore.get_title(6612130)
-    #print xlore.get_littleentity(1032938)
-    #print xlore.get_innerLink()
-    #print xlore.get_type(1039711,"all")
-    #print xlore.get_superclass(1039711,"all")
-    #print xlore.get_all_properties(1039711)
-    #xlore.create_littleentity(1022540,"all")
+    print xlore.get_image(1032938)
+    print xlore.get_abstract(1032938)
+    print xlore.get_fulltext(1032938)
+    print xlore.get_title(6612130)
+    print xlore.get_innerLink(1039711)
+    print xlore.get_type(1039711,"all")
+    print xlore.get_superclass(1039711,"all")
+    xlore.create_littleentity(1022540,"all")
     xlore.create_littleentity(1074721,"all")
     xlore.create_littleentity(1022540,"all")
     xlore.create_littleentity(1756117,"all")
