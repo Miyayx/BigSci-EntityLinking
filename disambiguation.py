@@ -11,150 +11,177 @@ from model.query import Query
 from model.little_entity import LittleEntity
 from term_extraction import TermExtractor
 from db import *
-from wiki_miner import *
+
+def normalize(d):
+    a = d.values()
+    n = len(a)
+    mean = sum(a) / n
+    std = math.sqrt(sum((x-mean)**2 for x in a) / n)
+
+    for k, v in d.items():
+        meanRemoved = v - mean #减去均值  
+        stded = meanRemoved / (std+1) #用标准差归一化  
+        d[k] = stded
+    return d
+
+################# Strategy ####################
+def context_sim(mention, cans, doc, db, num=0, threshold=None):
+    """
+    Compare context of comment and abstract of entity 
+    """
+    c_sim = {}
+    
+    def similar_cal(t, cans):
+#         print ("candiates:" + ' '+candidates)
+        for c in cans:
+            print (c)
+            a = db.get_abstract(c)
+            if a:
+                print (c+' ' +'has abstract')
+
+                seg_list = jieba.cut(t, cut_all=False)
+                t = " ".join(seg_list)
+                seg_list = jieba.cut(a, cut_all=False)
+                a = " ".join(seg_list)
+
+                try:
+                    c_sim[c] = similarity(t, a)
+                except:
+                    c_sim[c] = 0.0
+
+
+                for k,v in c_sim.items():
+                    print (k +' ' + str(v))
+            else:
+                c_sim[c] = 0.0
+
+    def similarity(t1, t2):
+        return Distance.cosine_distance(t1.lower(), t2.lower());
+    #if len(self.candidates) == 1:
+    #    return self.candidates[0]
+
+    similar_cal(doc, cans)
+
+    if threshold:
+        for k,v in c_sim.items():
+            if v < threshold:
+                c_sim.popitem(k)
+
+    return c_sim
+
+
+def entity_cooccur(db, mention, mentions, context_mentions,cans, threshold=None):
+    """
+    """
+
+    c_sim = {}
+    mentions = set(mentions)
+    context_mentions = set(context_mentions)
+
+    for c in cans:
+        print ("Can ID:"+c)
+        es = db.get_prop_entities(c)
+        print ("    Entities in graph:")
+        print ("    "+",".join(es))
+        if not es or len(es) == 0:
+            c_sim[c] = 0.0
+        else:
+            print ("    common: "+",".join(set(context_mentions)&set(es)))
+            c_sim[c] = len(set(context_mentions)&set(es))
+
+    for k,v in c_sim.items():
+        print (k+" "+str(v))
+        #c_sim[k] = v*1.0/len(mentions)
+        c_sim[k] = v*1.0/len(context_mentions)
+
+    if threshold:
+        for k,v in c_sim.items():
+            if v < threshold:
+                c_sim.pop(k)
+
+    return c_sim
+
+def frequency(can_db, mention, cans)
+    """
+    Choose the most hit one 
+    """
+
+    c_sim = {}
+
+    can_count = can_db.get_candidate_and_count(mention)
+    new_can_count = dict((k, can_count[k]) for k in cans if can_count[k] > 1)
+
+    if len(new_can_count) > 0:
+        can_count = new_can_count
+
+    for k,v in can_count.items():
+        print k,v
+
+    r = []
+    for c in c_c:
+        if self.is_in_domain(c[0]):
+            print c[0],"is in domain"
+            r.append(c[0])
+        if len(r) == num:
+            break
+    if len(r) == 0:
+        return [c[0] for c in c_c[:num]]
+    return r
+
+
+def title_editdistance(db, mention, cans):
+    """
+    Calculate the edit distance between two titles and get the most similar ones
+    """
+
+    c_sim = {}
+
+    for c in cans:
+        t = db.get_en_title(c)
+        c_sim[c] = Distance.levenshtein(mention, t)
+
+    return c_sim
+
 
 class Disambiguation():
 
-    def __init__(self, m, d, candidates):
-        self.mention = m
-        self.doc = d
-        self.candidates = candidates
-        self.c_sim = {}
-        self.threshold = 0.9
-        #self.similar_cal(t, candidates)
+    def __init__(self, func=None, args = {}):
 
-    def is_in_domain(self, c):
+        if not func:
+            raise ValueError("Not add strategy")
+        self.func = func
+        self.args = args
+
+    def get_best(self):
         """
-        If c(uri) is in specific domain
-        """
-        domain = ['100271','104436','100262','103549','100301','104859','105485','109406','100269']
-        uris = Xlore().get_type_uri(c)
-        for u in uris:
-            if u in domain:
-                return True
-            else:
-                path = MySQLDB().get_superpath(u)
-                if not path:
-                    continue
-                for p in path.split("/"):
-                    if p in domain:
-                        return True
-        return False
-
-    def domain_constrain(self):
-        """
-        Filter the candidate list with domain
-        """
-
-        new_can = []
-        for c in self.candidates:
-            if self.is_in_domain(c):
-                print c,"is in domain"
-                new_can.append(c)
-
-        self.candidates = new_can
-        return new_can
-
-    def remove_redirect_page(self, cs):
-        pass
-
-    def get_best_use_freq(self, num = 0):
-        """
-        Choose the most hit one 
+        return the highest score entity
         """
 
         if len(self.candidates) == 1:
             return self.candidates
-
-        can_count = MySQLDB().get_candidate_and_count(self.mention)
-        new_can_count = dict((k, can_count[k]) for k in self.candidates if can_count[k] > 1)
-
-        if len(new_can_count) > 0:
-            can_count = new_can_count
-
-        for k,v in can_count.items():
-            print k,v
-
-        c_c = sorted(can_count.iteritems(), key=lambda d:d[1], reverse = True)
-        if num <= 1 or not num:
-            num = 1
-        r = []
-        for c in c_c:
-            if self.is_in_domain(c[0]):
-                print c[0],"is in domain"
-                r.append(c[0])
-            if len(r) == num:
-                break
-        if len(r) == 0:
-            return [c[0] for c in c_c[:num]]
-        return r
-
-    def get_best_use_title(self, num = 0):
-        """
-        Calculate the edit distance between two titles and get the most similar ones
-        """
-
-        if len(self.candidates) == 1:
-            print "Has only one candidates "
-            return self.candidates
-
-        for c in self.candidates:
-            t = Xlore().get_en_title(c)
-            self.c_sim[c] = Distance.levenshtein(self.doc, t)
 
         import operator
-        if num <= 1 or not num:
-            best = min(self.c_sim.iteritems(), key=operator.itemgetter(1))[0]
-            
+        c_sim = self.func(**self.args)
+        if len(c_sim) == 0:
+            return {}
+        best = max(c_sim.iteritems(), key=operator.itemgetter(1))
+        return [best]
+
+    def get_sorted_cans(self, num=0):
+        """
+        Returns:
+            return all candidate with their similarity
+        """
+
+        c_sim = self.func(**self.args)
+
+        best = sorted(c_sim.items(), key=lambda x:x[1], reverse=True)
+        if num:
+            return best[:num]
         else:
-            best = sorted(self.c_sim.keys(), key=self.c_sim.get)[:num]
-        return best
-
-    def get_best(self, num = 0):
-        #candidates = Candidateset[q.text]
-        if len(self.candidates) == 1:
-            return self.candidates
-
-        self.similar_cal(self.doc, self.candidates)
-
-        import operator
-        if num <= 1 or not num:
-            best = max(self.c_sim.iteritems(), key=operator.itemgetter(1))[0]
-            
-        else:
-            best = max(self.c_sim.iteritems(), key=operator.itemgetter(1))[:num]
-        return best
-
-    def similar_cal(self, t, candidates):
-        print "candiates:",candidates
-        #URI2Abstract = loadURIToAbstract(candidates)
-        for c in candidates:
-            print c
-            a = Xlore().get_abstract(c)
-            if a:
-                print c,"has abstract"
-                #similar.append(self.similarity(t, URI2Abstract[c]))
-                self.c_sim[c] = self.similarity(str(t), str(a))
-            else:
-                self.c_sim[c] = None
-        #similar = [self.similarity(t, URI2Abstract[c]) for c in candidates]
-        #similar = [self.similarity(q.text, URI2Entity[c]) for c in candidates]
-        #similar = [s if s > self.threshold else None for s in similar]
-
-    def similarity(self, t1, t2):
-        return Distance.cosine_distance(t1.lower(), t2.lower());
-
-    def LINDEN(self, d, candidates):
-        w = [1,1,1]
-        feature = Feature(d)
-        results = []
-        for c in candidates:
-            f1 = feature.link_probability(self.mention, c)
-            f2 = feature.semantic_associativity(self.doc, c)
-            f3 = feature.global_coherence(c)
-            results.append(w[0]*f1, w[1]*f2, w[2]*f3)
-        return candidates[results.index(max(results))]
+            return best
         
+
 class Feature():
 
     def __init__(self, d):
