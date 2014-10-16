@@ -3,18 +3,13 @@
 
 class Query():
 
-    def __init__(self, text, start, end):
+    def __init__(self, text, index):
         self.text = text
-        self.start = start
-        self.end = end
-
-        self.entity_id  = 0
-        self.entity_uri = ""
-        self.entity_url = ""
-        self.similarity = 0
+        self.index = index
+        self.candidates = []
+        self.entities = []
 
     def __str__(self):
-        return "Query:::text:%s start:%d end:%d entity id:%s\n"%(self.text, self.start, self.end, self.entity_id)
-
+        return "Text: "+self.text.encode("utf-8")+","+"Index: "+str(self.index)+"\nEntities:"+str(self.entities)
 
         
