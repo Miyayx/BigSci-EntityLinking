@@ -50,7 +50,8 @@ class MySQLDB():
         self.create_conn()
 
         cur = self.conn.cursor()
-        cur.execute('SELECT entity FROM '+self.table+' WHERE mention = "'+MySQLdb.escape_string(mention)+'"')
+        q = 'SELECT entity FROM '+self.table+' WHERE mention = "'+MySQLdb.escape_string(mention)+'"'
+        cur.execute(q)
         result = cur.fetchall()
         cur.close()
         del cur
@@ -230,7 +231,6 @@ class Xlore():
                 if k == "abstract" or k == "label":
                     result[k] = {"en":v["enwiki"][0] if v.has_key("enwiki") else "", "ch":""}
                     for ch in ch_baike:
-                        print k,ch
                         if v.has_key(ch):
                             import re
                             rs = [r'\(.*?:\s*?\)',r'（.*?：\s*?）',r'(\s*?)',r'（\s*?）',r'（.*?,\s*?）',r'（.*?，\s*?）'] 
@@ -342,7 +342,7 @@ class Xlore():
     def get_type_uri(self, entity_id):
         c_uri = []
         sq = 'select * from <%s> where {<%s/instance/%s> <%s/property/instanceOf> ?type }'%( GRAPH, PREFIX, entity_id, PREFIX)
-        result = self.fetch_multi_result(sq)
+        result = self.db.fetch_multi_result(sq)
         for r in result:
             c_e_id = r.split("/")[-1]
             c_uri.append(c_e_id)
@@ -411,7 +411,6 @@ class Xlore():
     def get_title_and_image(self, entity_id,lan, n = 1):
         title = self.get_title(entity_id,lan)
         images = self.get_image(entity_id, n)
-        print "images",images
         return {"title": title, "image": images[0] if len(images) > 0 else ""}
 
     def get_image(self, entity_id, n = 3):

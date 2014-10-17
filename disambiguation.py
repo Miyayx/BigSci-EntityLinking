@@ -101,7 +101,7 @@ def entity_cooccur(db, mention, mentions, context_mentions,cans, threshold=None)
 
     return c_sim
 
-def frequency(can_db, mention, cans)
+def frequency(can_db, mention, cans):
     """
     Choose the most hit one 
     """
@@ -117,16 +117,7 @@ def frequency(can_db, mention, cans)
     for k,v in can_count.items():
         print k,v
 
-    r = []
-    for c in c_c:
-        if self.is_in_domain(c[0]):
-            print c[0],"is in domain"
-            r.append(c[0])
-        if len(r) == num:
-            break
-    if len(r) == 0:
-        return [c[0] for c in c_c[:num]]
-    return r
+    return can_count
 
 
 def title_editdistance(db, mention, cans):
