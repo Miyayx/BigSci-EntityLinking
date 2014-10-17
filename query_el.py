@@ -3,14 +3,15 @@
 
 import nltk
 import string
-
-from collections import Counter
+import jieba.posseg as pseg
+import re
 
 from model.query import Query
 from model.little_entity import LittleEntity
-from term_extraction import TermExtractor
 from db import *
 from disambiguation import *
+import stanford_parser 
+
 
 class QueryEL():
 
@@ -33,33 +34,26 @@ class QueryEL():
         self.candb = None
         self.graph = None
 
+        self.en_parser = None
+        self.zh_parser = None
+
     def run(self):
-        self.queries.append(Query(self.query_str, 0, 0))
-        try:
-            self.get_entity()
-        except:
-            self.db.create_conn()
-            self.get_entity()
-        if self.no_entity():
-            self.queries = []
-            w_num = len(self.query_str.split())
-            if w_num >= 5: # extract terminology
-                print "Extract terminology"
-                self.extract_mentions()
-                self.get_entity()
-            if self.no_entity() and w_num >= 3 and w_num <=5: # split query string into short substring
-                print "Split Query string"
-                self.split_querystr()
+        self.queries = []
 
-                if "-" in self.query_str:
-                    for q in self.query_str.split():
-                        if "-" in q:
-                            self.queries.append(Query(q, 0, 0))
-                            break
+        if re.match(u"[\u4e00-\u9fa5]+", self.query_str):#Chinese
+            if len(self.query_str) > 5 :
+                self.extract_zh_mentions(self.query_str)
+            else:
+                self.queries.append(Query(self.query_str, 0))
+        else: #English or others
+            if len(self.query_str.split()) > 3 :
+                self.extract_en_mentions(self.query_str)
+            else:
+                self.queries.append(Query(self.query_str, 0))
 
-                self.get_entity()
+        self.get_entity()
 
-    def set_can_db(self, db):
+    def set_candb(self, db):
         """
         Set Candidateset Mysql db
         """
@@ -71,40 +65,75 @@ class QueryEL():
         """
         self.graph = x
 
+    def set_en_parser(self, p):
+        self.en_parser = p
+
+    def set_zh_parser(self, p):
+        self.zh_parser = p
+
     def no_entity(self):
         return True if len(self.entities) == 0 else False
 
-    def extract_mentions(self):
+    def extract_en_mentions(self, s):
         """
-        Extract terminology from query string
+        Usr Standford Parser and NLTK to extract mentions from english string
         """
-        te = TermExtractor()
-        terms = te.get_terms(1, self.query_str)
-        if len(terms) > 0:
-            for t in terms:
-                q = Query(t.lower(), 0, 0)
-                self.queries.append(q)
-            
-        print "%d term mentions"%len(self.queries)
+        types = ['LOCATION','PERSON','ORGANIZATION']
 
-    def split_querystr(self):
+        if not self.en_parser:
+            self.en_parser = stanford_parser.Parser()
+        seg_list = self.en_parser.NER(s)
+        seg_index = []
+        last = 0
+        i  = 0
+        while i < len(seg_list):
+            segs = []
+            word, tag = seg_list[i]
+            if tag in types:
+                j = i
+                # 属于指定类型，类型相同且连续的，合到一起
+                while j < len(seg_list) and seg_list[j][1] == tag:
+                    segs.append(seg_list[j][0])
+                    j += 1
+                i = j
+                query = " ".join(segs)
+                print "query:",query
+                begin = s.index(query, last)
+                last = begin + len(query)
+                self.queries.append(Query(query, begin))
+            else:
+                #不属于指定类型，直接跳过
+                i += 1
+                begin = s.index(word, last)
+                last = begin + len(word)
+
+        print "%d mentions"%len(self.queries)
+
+    def extract_zh_mentions(self, s):
         """
-        Get sub query strings according to truncate the origin string
+        Use jieba to extract mentions from Chinese string
         """
-        ws = self.query_str.split()
-        for i in range(0,len(ws)-2):
-            for j in range(2,len(ws)):
-                new_query = " ".join(ws[i:j])
-                self.queries.append(Query(new_query, 0, 0))
+
+        types = ['nt','nr','nz','ns']
+
+        seg_list = pseg.cut(s)
+        seg_index = []
+        last = 0
+        for seg in seg_list:
+            begin = s.index(seg.word, last)
+            last = begin + len(seg.word)
+            if seg.flag in types:
+                self.queries.append(Query(seg.word, begin))
+            
+        print "%d mentions"%len(self.queries)
 
     def get_entity(self):
         cans = []
         for q in self.queries:
             print "Query String:",q.text
             cans = self.candb.get_candidateset(q.text)
-            print "length of candidates",len(candidates)
+            print "length of candidates",len(cans)
             if cans and len(cans) > 0:
-                print cans
                 if self.text and len(self.text) > 0:
                     #If section context exists
                     ####### context_sim ##########
@@ -113,7 +142,7 @@ class QueryEL():
                             "cans": cans, 
                             "doc" : self.comment,
                             "db"  : self.db,
-                            "threshold":None
+                            "threshold": None
                             }
 
                     d = Disambiguation(context_sim, args)
@@ -121,16 +150,17 @@ class QueryEL():
                     #if no session context, return the most similar title entity
 
                     args = {
-                            "can_db": candb,
+                            "can_db": self.candb,
                             "mention": q.text,
                             "cans": cans
                             }
+
                     d = Disambiguation(frequency, args)
 
-                can_sim = d.get_sorted_cans(num=1)
+                can_sim = d.get_sorted_cans(self.limit)
 
                 for e_id, sim in can_sim:
-                    le = self.graph.create_littleentity(e_id)
+                    le = self.graph.create_littleentity(e_id, self.lan)
                     e = LittleEntity(**le)
                     e.sim = sim
                     q.entities.append(e)
@@ -167,17 +197,23 @@ if __name__=="__main__":
     #################### Query Test #####################33
     db = MySQLDB()
     xlore = Xlore()
-    l = ["data mining and social network"]
+    l = ["I went to New York to meet John Smith"]
+    #l = ["Micheal Jordan"]
+    #l = ["machine learning"]
     for i in l:
         param = {}
         param['type']  = 'query'
-        param['limit'] = 0
+        param['limit'] = 1
         param['text']  = ""
         param['t']     = datetime.datetime.now()
         param['query_str'] = i
         e = QueryEL(param)
-        e.set_db(db)
-        e.set_xlore(xlore)
+        e.set_candb(db)
+        e.set_graph_db(xlore)
+
+        p = stanford_parser.Parser()
+        e.set_en_parser(p)
+
         e.run()
 
         for entity in e.entities:
