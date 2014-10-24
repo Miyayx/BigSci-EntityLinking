@@ -96,22 +96,3 @@ if __name__=="__main__":
     #            f.write(str(q))
     #        f.write("\n")
 
-    #################### Query Test #####################33
-    db = MySQLDB()
-    xlore = Xlore()
-    l = ["data mining and social network"]
-    for i in l:
-        param = {}
-        param['type']  = 'query'
-        param['limit'] = 0
-        param['text']  = ""
-        param['t']     = datetime.datetime.now()
-        param['query_str'] = i
-        e = QueryEL(param)
-        e.set_db(db)
-        e.set_xlore(xlore)
-        e.run()
-
-        for entity in e.entities:
-            print entity
-

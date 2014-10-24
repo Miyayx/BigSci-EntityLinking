@@ -12,6 +12,9 @@ from db import *
 from disambiguation import *
 import stanford_parser 
 
+"""
+This is the entity linging for normal string
+"""
 
 class QueryEL():
 
@@ -29,13 +32,13 @@ class QueryEL():
             self.lan = "all"
 
         self.queries = [] #list of text
-        self.entities = []
         self.limit = args["limit"] if args.has_key("limit") else None
         self.candb = None
         self.graph = None
 
         self.en_parser = None
         self.zh_parser = None
+
 
     def run(self):
         self.queries = []
@@ -59,7 +62,7 @@ class QueryEL():
         """
         self.candb = db
 
-    def set_graph_db(self, x):
+    def set_graph(self, x):
         """
         Set XLore db
         """
@@ -171,30 +174,6 @@ class QueryEL():
 if __name__=="__main__":
     import datetime
 
-    #################### Abstract Test #####################33
-    ##loadCandidateSet()
-    #loadEntity2URI()
-    ##loadURI2Entity()
-    ##loadEntityToAbstract()
-    #db = MySQLDB()
-    #with open("new_abstract.txt","w") as f:
-    #    for a in loadAbstract():
-    #        param = {}
-    #        param['type'] = 'abstract'
-    #        param['paper_id'] = 0
-    #        param['limit'] = 0
-    #        param['text'] = a
-    #        param['t'] = datetime.datetime.now()
-    #        e = AbstractEL(param)
-    #        e.set_db(db)
-    #       
-    #        f.write(e.text+"\n\n")
-    #        e.run()
-    #        for q in e.queries:
-    #            f.write(str(q))
-    #        f.write("\n")
-
-    #################### Query Test #####################33
     db = MySQLDB()
     xlore = Xlore()
     l = ["I went to New York to meet John Smith"]

@@ -10,6 +10,10 @@ from term_extraction import TermExtractor
 from db import *
 from disambiguation import *
 
+"""
+This is the entity linking module for BigSci query
+"""
+
 class BigSciEL():
 
     def __init__(self, args):
@@ -27,7 +31,7 @@ class BigSciEL():
 
         self.queries = [] #list of text
         self.entities = []
-        self.limit = args["limit"] if args.has_key("limit") else None
+        self.limit = args["limit"] if args.has_key("limit") else 1 #这里跟query_el很不一样哦
         self.candb = None
         self.graph = None
 
@@ -63,7 +67,7 @@ class BigSciEL():
         """
         self.candb = db
 
-    def set_graph_db(self, x):
+    def set_graph(self, x):
         """
         Set XLore db
         """
@@ -167,29 +171,6 @@ class BigSciEL():
 
 if __name__=="__main__":
     import datetime
-
-    #################### Abstract Test #####################33
-    ##loadCandidateSet()
-    #loadEntity2URI()
-    ##loadURI2Entity()
-    ##loadEntityToAbstract()
-    #db = MySQLDB()
-    #with open("new_abstract.txt","w") as f:
-    #    for a in loadAbstract():
-    #        param = {}
-    #        param['type'] = 'abstract'
-    #        param['paper_id'] = 0
-    #        param['limit'] = 0
-    #        param['text'] = a
-    #        param['t'] = datetime.datetime.now()
-    #        e = AbstractEL(param)
-    #        e.set_db(db)
-    #       
-    #        f.write(e.text+"\n\n")
-    #        e.run()
-    #        for q in e.queries:
-    #            f.write(str(q))
-    #        f.write("\n")
 
     #################### Query Test #####################33
     db = MySQLDB()

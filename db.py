@@ -41,7 +41,6 @@ class MySQLDB():
         if self.conn:
             self.conn.close()
         try:
-            print "Create new connection"
             self.conn = MySQLdb.connect(host=MySQLDB.HOST, user=MySQLDB.USER, passwd=MySQLDB.PASSWD,db=MySQLDB.DBNAME,port=MySQLDB.PORT, charset="utf8")
         except MySQLdb.Error, e:
             print "Mysql Error %d: %s" % (e.args[0], e.args[1])
@@ -51,6 +50,7 @@ class MySQLDB():
 
         cur = self.conn.cursor()
         q = 'SELECT entity FROM '+self.table+' WHERE mention = "'+MySQLdb.escape_string(mention)+'"'
+        print q
         cur.execute(q)
         result = cur.fetchall()
         cur.close()
@@ -132,8 +132,6 @@ class MySQLDB():
         entity["abstract"] = {"en":result[2] if result[2] else "","ch":""}
         entity["image"] = []
         entity["related_item"] = []
-
-        print "Entity:",entity
 
         return entity
 
@@ -439,7 +437,6 @@ class Xlore():
         entity["super_topic"] = self.get_superclass(entity_id, lan)
         entity["abstract"] = self.get_abstract(entity_id, lan)
         entity["image"] = self.get_image(entity_id)
-        print "entity", entity
         return entity
 
     def create_littleentity(self, entity_id, lan):
@@ -465,7 +462,6 @@ class Xlore():
         else:
             entity["abstract"] = {"en":"","ch":""}
         entity["image"] = d["image"][0:3] if d.has_key("image") else []
-        print "entity", entity
         return entity
         
 

@@ -1,6 +1,8 @@
 #!/usr/bin/env/python2.7
 #-*-coding:UTF-8-*-
 
+import json
+
 class LittleEntity():
 
     def __init__(self, _id, uri, url,type, title, super_topic, abstract, image, related_item ):
@@ -16,6 +18,9 @@ class LittleEntity():
 
     def __str__(self):
         return "title:"+str(self.title)+"#"+"uri:"+str(self.uri)+"image_url:"+str(self.image)
+
+    def __repr__(self):
+        return json.dumps(self.__dict__, indent=2)
 
 
 

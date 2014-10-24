@@ -167,8 +167,8 @@ class Disambiguation():
         c_sim = self.func(**self.args)
 
         best = sorted(c_sim.items(), key=lambda x:x[1], reverse=True)
-        if num:
-            return best[:num]
+        if num and int(num):
+            return best[:int(num)]
         else:
             return best
         
