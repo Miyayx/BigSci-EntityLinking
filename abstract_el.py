@@ -19,7 +19,6 @@ class AbstractEL():
     
     def __init__(self, args):
         #print "Abstract", text
-        self.origin = args["text"]
         self.text = args["text"]
         self.limit = args["limit"]
         self.queries = []
@@ -33,8 +32,17 @@ class AbstractEL():
             print str(q)
         self.get_entity()
 
-    def set_db(self, db):
-        self.db = db
+    def set_candb(self, db):
+        """
+        Set Candidateset Mysql db
+        """
+        self.candb = db
+
+    def set_graph(self, x):
+        """
+        Set XLore db
+        """
+        self.graph = x
 
     def extract_mentions(self):
 
@@ -42,7 +50,7 @@ class AbstractEL():
         for t in te.get_terms(1,self.text):
             try:
                 index = self.text.index(t)
-                q = Query(t.lower(), index, index+len(t) )
+                q = Query(t.lower(), index)
                 self.queries.append(q)
             except ValueError,e:
                 print "Substring:",t,"is not in string"
@@ -51,24 +59,33 @@ class AbstractEL():
 
     def get_entity(self):
         for q in self.queries:
-            q.entities = []
-            cans = self.db.get_candidateset(q.text)
+            cans = self.candb.get_candidateset(q.text)
             q.candidates = cans
 
-            if cans:
-                print ("candidate of " +q.text)
-
+            print "length of candidates",len(cans)
+            if cans and len(cans) > 0:
+                #If section context exists
+                ####### context_sim ##########
+                print self.graph
                 args = {
+                        "mention" : q.text, 
+                        "cans": cans, 
+                        "doc" : self.text,
+                        "db"  : self.graph,
+                        "threshold": None
                         }
-                d = Disambiguation()
 
-                can_sim = d.get_best()
+                d = Disambiguation(context_sim, args)
 
-                q.entity_uri = PREFIX + "instance/"+q.entity_id
-                q.entity_url = XLORE_URL_PREFIX+q.entity_uri
-            else:
-                self.queries.remove(q)
+                can_sim = d.get_sorted_cans(self.limit)
 
+                for e_id, sim in can_sim:
+                    le = self.graph.create_littleentity(e_id, "en")
+                    e = LittleEntity(**le)
+                    e.sim = sim
+                    q.entities.append(e)
+            #else:
+            #    self.queries.remove(q)
 
 if __name__=="__main__":
     import datetime

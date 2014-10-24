@@ -36,20 +36,6 @@ class LinkingResource(Resource):
         if not args.has_key('type') or len(args['type']) == 0:
             args['type'] = 'query'
             
-        if args['type'] == 'abstract':
-            e = AbstractEL(args)
-            e.set_candb(self.source["candb"])
-            e.set_graph(self.source["graph"])
-
-            e.run()
-            
-            data = {}
-            data["paper_id"] = args["paper_id"]
-            data["text"] = e.origin
-            data["entity"] = map(self.parse_abstract_result, e.queries)
-
-            return simplejson.dumps(data)
-
         if args['type'] == 'query':
             e = BigSciEL(args)
             e.set_candb(self.source["candb"])
@@ -59,6 +45,21 @@ class LinkingResource(Resource):
             data["query_str"] = e.query_str
             data["entity"] = map(self.parse_query_result, e.entities)
             return simplejson.dumps(data)
+
+        if args['type'] == 'abstract':
+            e = AbstractEL(args)
+            e.set_candb(self.source["candb"])
+            e.set_graph(self.source["graph"])
+
+            e.run()
+            
+            data = {}
+            data["paper_id"] = args["paper_id"]
+            data["text"] = e.text
+            data["limit"] = 1
+            data["queries"] = e.queries
+
+            return repr(data)
 
         if args['type'] == 'el':
             e = QueryEL(args)
@@ -81,8 +82,7 @@ class LinkingResource(Resource):
     def parse_abstract_result(self, q):
         query = {}
         query["query"] = q.text
-        query["start"] = q.start
-        query["end"]   = q.end
+        query["start"] = q.index
         query["entity_id"]  = q.entity_id
         query["entity_uri"] = q.entity_uri
         query["entity_url"] = q.entity_url

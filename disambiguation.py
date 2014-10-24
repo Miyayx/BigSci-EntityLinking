@@ -4,8 +4,10 @@
 import nltk
 import string
 import math
+import re
 
 from collections import Counter
+import jieba
 
 from model.query import Query
 from model.little_entity import LittleEntity
@@ -33,22 +35,29 @@ def context_sim(mention, cans, doc, db, num=0, threshold=None):
     
     def similar_cal(t, cans):
 #         print ("candiates:" + ' '+candidates)
+        if re.match(u"[\u4e00-\u9fa5]+", t):#Chinese
+            lan = "ch"
+        else:
+            lan="en"
+
         for c in cans:
             print (c)
             a = db.get_abstract(c)
+            if isinstance(a, dict):
+                a = a[lan]
             if a:
                 print (c+' ' +'has abstract')
-
-                seg_list = jieba.cut(t, cut_all=False)
-                t = " ".join(seg_list)
-                seg_list = jieba.cut(a, cut_all=False)
-                a = " ".join(seg_list)
+                print a
+                if lan=="ch":
+                    seg_list = jieba.cut(t, cut_all=False)
+                    t = " ".join(seg_list)
+                    seg_list = jieba.cut(a, cut_all=False)
+                    a = " ".join(seg_list)
 
                 try:
                     c_sim[c] = similarity(t, a)
                 except:
                     c_sim[c] = 0.0
-
 
                 for k,v in c_sim.items():
                     print (k +' ' + str(v))
