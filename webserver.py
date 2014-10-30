@@ -6,15 +6,22 @@ from twisted.web import server, resource, http
 from twisted.web.static import File
 
 import datetime
-import simplejson
+import json
 
 from abstract_el import AbstractEL
 from query_el import QueryEL
 from bigsci_el import BigSciEL
 import stanford_parser 
 from db import *
+from model.little_entity import LittleEntity
 
 PREFIX = "http://keg.cs.tsinghua.edu.cn/instance/"
+
+class EntityEncoder(json.JSONEncoder):  
+    def default(self, obj):  
+        if isinstance(obj, LittleEntity):  
+            return json.dumps(obj.__dict__, indent=2)
+        return json.JSONEncoder.default(self, obj)  
 
 class LinkingResource(Resource):
 
@@ -43,8 +50,12 @@ class LinkingResource(Resource):
             e.run()
             data = {}
             data["query_str"] = e.query_str
-            data["entity"] = map(self.parse_query_result, e.entities)
-            return simplejson.dumps(data)
+            #data["entity"] = map(self.parse_query_result, e.entities)
+            print "Queries:",len(e.queries)
+            #data["entity"] = repr(e.queries[0].entities)
+            es = [entity.__dict__ for entity in e.entities ]
+            data["entity"] = es
+            return json.dumps(data)
 
         if args['type'] == 'abstract':
             e = AbstractEL(args)

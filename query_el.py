@@ -144,7 +144,14 @@ class QueryEL():
 
     def get_entity(self):
         cans = []
+        store = {}
         for q in self.queries:
+
+            if q.text in store.keys():#如果已经查询过这个mention了
+                q.entities = store[q.text].entities
+                print q.text,"Hit"
+                continue
+
             print "Query String:",q.text
             cans = self.candb.get_candidateset(q.text)
             print "length of candidates",len(cans)
@@ -180,6 +187,8 @@ class QueryEL():
                     e = LittleEntity(**le)
                     e.sim = sim
                     q.entities.append(e)
+
+                store[q.text] = q
             #else:
             #    self.queries.remove(q)
 

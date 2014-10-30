@@ -30,36 +30,34 @@ class BigSciEL():
             self.lan = "all"
 
         self.queries = [] #list of text
-        self.entities = []
+        self.entities = [] #list of entities
         self.limit = args["limit"] if args.has_key("limit") else 1 #这里跟query_el很不一样哦
         self.candb = None
         self.graph = None
 
     def run(self):
-        self.queries.append(Query(self.query_str, -1))
-        try:
-            self.get_entity()
-        except:
-            self.candb.create_conn()
-            self.get_entity()
-        if self.no_entity():
-            self.queries = []
-            w_num = len(self.query_str.split())
-            if w_num >= 5: # extract terminology
-                print "Extract terminology"
-                self.extract_mentions()
-                self.get_entity()
-            if self.no_entity() and w_num >= 3 and w_num <=5: # split query string into short substring
-                print "Split Query string"
-                self.split_querystr()
+        self.queries = []
+        w_num = len(self.query_str.split())
+        if w_num < 3:
+            self.queries.append(Query(self.query_str, -1))
+        if w_num >= 5: # extract terminology
+            print "Extract terminology"
+            self.extract_mentions()
+        if self.no_entity() and w_num >= 3 and w_num <=5: # split query string into short substring
+            print "Split Query string"
+            self.split_querystr()
 
-                if "-" in self.query_str:
-                    for q in self.query_str.split():
-                        if "-" in q:
-                            self.queries.append(Query(q, 0, 0))
-                            break
+            if "-" in self.query_str:
+                for q in self.query_str.split():
+                    if "-" in q:
+                        self.queries.append(Query(q, -1))
+                        break
 
-                self.get_entity()
+        self.get_entity()
+        for q in self.queries:
+            if len(q.entities):
+                self.entities.append(q.entities[0])
+
 
     def set_candb(self, db):
         """
@@ -74,7 +72,10 @@ class BigSciEL():
         self.graph = x
 
     def no_entity(self):
-        return True if len(self.entities) == 0 else False
+        es = []
+        for q in self.queries:
+            es += q.entities
+        return True if len(es) == 0 else False
 
     def is_in_domain(self, c):
         """
@@ -102,7 +103,7 @@ class BigSciEL():
         terms = te.get_terms(1, self.query_str)
         if len(terms) > 0:
             for t in terms:
-                q = Query(t.lower(), 0, 0)
+                q = Query(t.lower(), -1)
                 self.queries.append(q)
             
         print "%d term mentions"%len(self.queries)
@@ -115,7 +116,7 @@ class BigSciEL():
         for i in range(0,len(ws)-2):
             for j in range(2,len(ws)):
                 new_query = " ".join(ws[i:j])
-                self.queries.append(Query(new_query, 0, -1))
+                self.queries.append(Query(new_query, -1))
 
     def get_entity(self):
         cans = []
