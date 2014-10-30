@@ -112,7 +112,8 @@ class OdbcVirtDB(VirtDB):
         return:
             one result(if hits) or None(if no hit)
         """
-        self.connect()
+        if not self.db:
+            self.connect()
         sq = "sparql " + sq
         cursor = self.db.cursor()
         try:
@@ -134,7 +135,8 @@ class OdbcVirtDB(VirtDB):
             result list(if hits) or empty list(if no hit)
         """
 
-        self.connect()
+        if not self.db:
+            self.connect()
         sq = "sparql " + sq
         cursor = self.db.cursor()
         try:
@@ -148,7 +150,9 @@ class OdbcVirtDB(VirtDB):
         return results
 
     def query(self, sq):
-        self.connect()
+
+        if not self.db:
+            self.connect()
 
         sq = "sparql " + sq
         cursor = self.db.cursor()
@@ -161,11 +165,10 @@ class OdbcVirtDB(VirtDB):
             return []
         finally:
             cursor.close()
-            self.db.close()
         return results
 
     def close(self):
-        pass
+        self.db.close()
 
 
 class JenaVirtDB(VirtDB):
