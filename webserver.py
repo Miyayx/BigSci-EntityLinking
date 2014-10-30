@@ -65,7 +65,8 @@ class LinkingResource(Resource):
             e.run()
             
             data = {}
-            data["paper_id"] = args["paper_id"]
+            if args.has_key('paper_id'):
+                data["paper_id"] = args["paper_id"] 
             data["text"] = e.text
             data["limit"] = 1
             qs = [query.d() for query in e.queries]

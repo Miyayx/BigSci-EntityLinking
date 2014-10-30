@@ -19,8 +19,8 @@ class AbstractEL():
     
     def __init__(self, args):
         #print "Abstract", text
-        self.text = args["text"]
-        self.limit = args["limit"]
+        self.text = args["text"] 
+        self.limit = args["limit"] if args.has_key('limit') else 1
         self.queries = []
         self.threshold = 0
         self.db = None
