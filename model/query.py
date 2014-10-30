@@ -20,6 +20,16 @@ class Query():
                 "index":self.index,
                 "entities":self.entities
                 }
-        return repr(d)
+        return str(d)
+
+    def d(self):
+        es = [e.__dict__ for e in self.entities]
+        d = {
+                "query":self.text,
+                "index":self.index,
+                "entities":es
+                }
+        return d
+
 
         

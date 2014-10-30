@@ -20,7 +20,7 @@ class LittleEntity():
         return "title:"+str(self.title)+"#"+"uri:"+str(self.uri)+"image_url:"+str(self.image)
 
     def __repr__(self):
-        return json.dumps(self.__dict__, indent=2)
+        return str(self.__dict__)
 
 
 

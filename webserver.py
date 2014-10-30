@@ -68,9 +68,10 @@ class LinkingResource(Resource):
             data["paper_id"] = args["paper_id"]
             data["text"] = e.text
             data["limit"] = 1
-            data["queries"] = e.queries
+            qs = [query.d() for query in e.queries]
+            data["queries"] = qs
 
-            return repr(data)
+            return json.dumps(data, indent=2)
 
         if args['type'] == 'el':
             e = QueryEL(args)
@@ -78,7 +79,8 @@ class LinkingResource(Resource):
             e.set_graph(self.source["graph"])
             e.set_en_parser(self.source["en_parser"])
             e.run()
-            return repr(e.queries)
+            qs = [query.d() for query in e.queries]
+            return json.dumps(qs,indent=2)
 
         else:
             #raise Exception
