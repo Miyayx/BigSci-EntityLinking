@@ -27,28 +27,27 @@ def normalize(d):
     return d
 
 ################# Strategy ####################
-def context_sim(mention, cans, doc, db, num=0, threshold=None):
+def context_sim(mention, cans, doc, db, num=0, threshold=None, lan="en"):
     """
     Compare context of comment and abstract of entity 
     """
     c_sim = {}
     
-    def similar_cal(t, cans):
+    def similar_cal(t, cans, lan):
 #         print ("candiates:" + ' '+candidates)
-        if re.match(u"[\u4e00-\u9fa5]+", t):#Chinese
-            lan = "ch"
-        else:
-            lan="en"
-
         for c in cans:
             print (c)
-            a = db.get_abstract(c)
+            a = db.get_abstract(c, lan)
             if isinstance(a, dict):
+                if lan == "all":
+                    lan = "en"
                 a = a[lan]
+                print a
             if a:
                 print (c+' ' +'has abstract')
                 print a
                 if lan=="ch":
+                    print "lan==ch"
                     seg_list = jieba.cut(t, cut_all=False)
                     t = " ".join(seg_list)
                     seg_list = jieba.cut(a, cut_all=False)
@@ -69,7 +68,7 @@ def context_sim(mention, cans, doc, db, num=0, threshold=None):
     #if len(self.candidates) == 1:
     #    return self.candidates[0]
 
-    similar_cal(doc, cans)
+    similar_cal(doc, cans, lan)
 
     if threshold:
         for k,v in c_sim.items():

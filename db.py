@@ -429,7 +429,7 @@ class Xlore():
     def get_littleentity(self, entity_id, lan):
         entity = {}
         entity["_id"] = entity_id
-        entity["uri"] = PREFIX+entity_id
+        entity["uri"] = os.path.join(PREFIX,entity_id)
         entity["url"] = XLORE_URL_PREFIX+PREFIX+entity_id
 
         entity["title"] = self.get_title(entity_id, lan)

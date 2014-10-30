@@ -24,10 +24,15 @@ class Parser(object):
         self.st = NERTagger(os.path.join(STANFORD_PATH,'classifiers/english.all.3class.distsim.crf.ser.gz'), os.path.join(STANFORD_PATH,'stanford-ner-3.4.jar'))
 
     def NER(self, s):
+        s = s.replace('.',' ')
+        s = s.encode('utf-8')
         return self.st.tag(s.split())
 
 if __name__ == "__main__":
     p = Parser()
     #print p.NER("I went to New York to meet John Smith")
-    print p.NER("Michael Jordan")
+    #print p.NER("Michael Jordan")
+    for line in open('data/news.txt'):
+        print p.NER(line)
+
 

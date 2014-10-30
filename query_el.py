@@ -20,6 +20,10 @@ class QueryEL():
 
     def __init__(self, args):
         self.query_str = args["query_str"] if args.has_key("query_str") else None
+        try:
+            self.query_str = self.query_str.decode('utf-8')
+        except:
+            pass
         self.text = args["text"] if args.has_key("text") else None
         if args.has_key("lan"):
             if args["lan"] == "en":
@@ -42,8 +46,10 @@ class QueryEL():
 
     def run(self):
         self.queries = []
+        print "query_str:",self.query_str
 
-        if re.match(u"[\u4e00-\u9fa5]+", self.query_str):#Chinese
+        if re.match(ur"[\u4e00-\u9fff]+", self.query_str):#Chinese
+            self.lan = "ch"
             if len(self.query_str) > 5 :
                 self.extract_zh_mentions(self.query_str)
             else:
@@ -87,8 +93,10 @@ class QueryEL():
             self.en_parser = stanford_parser.Parser()
         seg_list = self.en_parser.NER(s)
         seg_index = []
+        begin = 0
         last = 0
         i  = 0
+        print seg_list
         while i < len(seg_list):
             segs = []
             word, tag = seg_list[i]
@@ -101,14 +109,18 @@ class QueryEL():
                 i = j
                 query = " ".join(segs)
                 print "query:",query
-                begin = s.index(query, last)
+                try:
+                    begin = s.index(query, last)
+                    print "Can't find %s"%query
+                except:
+                    continue
                 last = begin + len(query)
                 self.queries.append(Query(query, begin))
             else:
                 #不属于指定类型，直接跳过
                 i += 1
-                begin = s.index(word, last)
-                last = begin + len(word)
+                #begin = s.index(word, last)
+                #last = begin + len(word)
 
         print "%d mentions"%len(self.queries)
 
@@ -126,7 +138,7 @@ class QueryEL():
             begin = s.index(seg.word, last)
             last = begin + len(seg.word)
             if seg.flag in types:
-                self.queries.append(Query(seg.word, begin))
+                self.queries.append(Query(seg.word.encode('utf-8'), begin))
             
         print "%d mentions"%len(self.queries)
 
@@ -143,9 +155,10 @@ class QueryEL():
                     args = {
                             "mention" : q.text, 
                             "cans": cans, 
-                            "doc" : self.comment,
-                            "db"  : self.db,
-                            "threshold": None
+                            "doc" : self.text,
+                            "db"  : self.graph,
+                            "threshold": None,
+                            "lan":self.lan
                             }
 
                     d = Disambiguation(context_sim, args)
