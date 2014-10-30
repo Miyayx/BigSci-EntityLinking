@@ -444,8 +444,8 @@ class Xlore():
         entity = {}
         entity_id = str(entity_id)
         entity["_id"] = entity_id
-        entity["uri"] = PREFIX+entity_id
-        entity["url"] = XLORE_URL_PREFIX+PREFIX+entity_id
+        entity["uri"] = PREFIX+'/'+entity_id
+        entity["url"] = XLORE_URL_PREFIX+PREFIX+'/'+entity_id
 
         q_result = self.get_instance_properties(entity_id)
         d = self.parse_properties(q_result)

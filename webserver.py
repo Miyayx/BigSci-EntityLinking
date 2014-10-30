@@ -55,7 +55,7 @@ class LinkingResource(Resource):
             #data["entity"] = repr(e.queries[0].entities)
             es = [entity.__dict__ for entity in e.entities ]
             data["entity"] = es
-            return json.dumps(data)
+            return json.dumps(data, indent=2)
 
         if args['type'] == 'abstract':
             e = AbstractEL(args)
