@@ -8,20 +8,18 @@ import simplejson
 
 """
 request:
-    abstract:
+    el for newsminer:
     {
-        type     : "abstract",
-        paper_id : paper_id(int),
-        text     : abstrct_text,
+        type     : "el",
+        text     : context,
+        query_str: query word
         limit    : the max num of returned entities 
         t        : time
     }
 
 response: format:json:
-    abstract:
     {
-        paper_id : paper_id(int),
-        text     : formatted abstract,
+        text     : formatted context,
         t        : time,
         entity:[
             {
