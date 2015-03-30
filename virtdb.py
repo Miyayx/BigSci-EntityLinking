@@ -229,8 +229,7 @@ class WrapperVirtDB(VirtDB):
     def query(self, sq):
         results = []
         self.db.setQuery("""%s"""%sq)
-        s,p,o = sq[sq.index('{'):sq.index('}')].split()[:3]
-        print s,p,o
+        s,p,o = sq[sq.index('{'):sq.index('}')].strip().split()[:3]
         p = p.strip()
         o = o.strip()
         if o.startswith('?'):
@@ -238,11 +237,11 @@ class WrapperVirtDB(VirtDB):
         self.db.setReturnFormat(JSON)
         for result in self.db.query().convert()["results"]["bindings"]:
             #print json.dumps(result, indent=2)
-            if p.startswith('?'):
+            if p.startswith('?'): #如果查的是property和object
                 prop = p[1:]
                 q = QResult(result[prop]['value'], result[o]['value'], result[o].get('xml:lang',''))
                 results.append(q)
-            else:
+            else: #如果指定property，查询object
                 prop = p[1:-1]
                 q = QResult(prop, result[o]['value'], result[o].get('xml:lang',''))
                 results.append(q)

@@ -11,7 +11,6 @@ from urllib import quote
 from utils import *
 from virtdb import *
 
-
 class MySQLDB():
 
     configs = ConfigTool.parse_config("./config/db.cfg","MySQL")
@@ -135,19 +134,6 @@ class MySQLDB():
 
         return entity
 
-    def insert_wiki_entity(self, title, super_topic, abstract,url):
-        self.create_conn()
-
-        cur = self.conn.cursor()
-        title = MySQLdb.escape_string(title)
-        url = MySQLdb.escape_string(url)
-        super_topic = MySQLdb.escape_string(super_topic)
-        abstract = MySQLdb.escape_string(abstract)
-        cur.execute('INSERT INTO entity_linking.wiki_db (title,abstract,super_topic,url) VALUES("%s","%s","%s","%s");'%(title,abstract,super_topic,url))
-        MySQLDB._db.commit()
-        
-        cur.close()
-
     def insert_candidate(self, mention, uri, count):
         self.create_conn()
         cur = self.conn.cursor()
@@ -177,291 +163,165 @@ class MySQLDB():
 
 XLORE_URL="http://xlore.org/sigInfo.action"
 XLORE_URL_PREFIX="http://xlore.org/sigInfo.action?uri="
-PREFIX = "http://keg.cs.tsinghua.edu.cn"
-GRAPH = 'lore4'
+PREFIX = "http://xlore.org"
+GRAPH = 'xlore2'
+
+"""
+Format 修改记录：
+1. ch--> zh
+2. delete super_topic
+"""
+
+QUERY_LABEL = {
+#        "title"       :"label",
+#        "abstract"    :"comment",
+#        "type"        :"InstanceOf",
+#        "related_item":"hasReferedTo",
+#        "image"       :"hasImage",
+#        "icon"        :"hasIcon",
+        "title"       :"http://www.w3.org/2000/01/rdf-schema#label",
+        "abstract"    :"http://www.w3.org/2000/01/rdf-schema#comment",
+        "type"        :"http://www.w3.org/2002/07/owl#InstanceOf",
+        "related_item":"http://xlore.org/property#hasReferedTo",
+        "image"       :"http://xlore.org/property#hasImage",
+        "icon"        :"http://xlore.org/property#hasIcon",
+        }
 
 class Xlore():
 
-    
     def __init__(self):
         configs = ConfigTool.parse_config("./config/db.cfg","XLore")
+        print configs
         import sys
         if re.match('linux',sys.platform):#Linux
             #self.db = JenaVirtDB(**configs)
-            self.db = OdbcVirtDB(**configs)
+            #self.db = OdbcVirtDB(**configs)
+            self.db = WrapperVirtDB(configs['host'], "8890")
         else:
-            self.db = OdbcVirtDB(**configs)
+            #self.db = OdbcVirtDB(**configs)
+            self.db = WrapperVirtDB(configs['host'], "8890")
         GRAPH = configs['graph']
 
     def get_instance_properties(self, entity_id):
         sq = 'select * from <%s> where {<%s/instance/%s> ?p ?o}'%(GRAPH, PREFIX, entity_id)
-        result_set = self.db.query(sq)
-        result = {}
-        for p, o in result_set:
-            result[p] = result.get(p,[]) + [o]
-        return result
+        return self.db.query(sq)
 
-    def get_concept_properties(self, entity_id):
-        sq = 'select * from <%s> where {<%s/concept/%s> ?p ?o}'%(GRAPH, PREFIX, entity_id)
-        result_set = self.db.query(sq)
-        result = {}
-        for p, o in result_set:
-            result[p] = result.get(p,[]) + [o]
-        return result
-
-    def parse_properties(self, p2o):
-        d = {}
-        for p,o in p2o.items():
-            items = p.split("/")
-            if len(items) == 5: # no enwiki,zhwiki...
-                d[items[-1]] = o
-            if len(items) == 6:
-                if not d.has_key(items[-1]):
-                    d[items[-1]] = {}
-                d[items[-1]][items[-2]] = o
-        
-        result = {}
-
-        ch_baike = ["zhwiki","baidu","hudong"]
-        
-        for k,v in d.items():
-            if isinstance(v, dict):
-                if k == "abstract" or k == "label":
-                    result[k] = {"en":v["enwiki"][0] if v.has_key("enwiki") else "", "ch":""}
-                    for ch in ch_baike:
-                        if v.has_key(ch):
-                            import re
-                            rs = [r'\(.*?:\s*?\)',r'（.*?：\s*?）',r'(\s*?)',r'（\s*?）',r'（.*?,\s*?）',r'（.*?，\s*?）'] 
-                            for r in rs:
-                                v[ch][0] = re.sub(r,"",v[ch][0])
-                            result[k]["ch"] = v[ch][0]
-                            break
-                elif k == "image":
-                    result[k] = v.get("enwiki",[]) + v.get("zhwiki",[]) + v.get("hudong",[])
-                else:
-                    s_ch = set()
-                    for ch in ch_baike:
-                        for i in v.get(ch,[]):
-                            if i.startswith("http"):
-                                s_ch.add(i)
-                    s_en = set()
-                    for i in v.get("enwiki",[]):
-                        s_en.add(i)
-                    result[k] = {"en":list(s_en) if v.has_key("enwiki") else [], "ch": list(s_ch)}
-            else:
-                result[k] = v
-
-        return result
-
-    def get_concept_label(self, entity_id, lan):
-        if lan == "en":
-            return {"en":self.get_en_concept_label(entity_id)}
-        if lan == "ch":
-            return {"ch":self.get_ch_concept_label(entity_id)}
-        if lan == "all":
-            return {"en":self.get_en_concept_label(entity_id),"ch":self.get_ch_concept_label(entity_id)}
+    def get_concept_label(self, entity_id, lan=None):
+        if 'en' == lan or 'zh' == lan:
+            sq = 'select * from <%s> where {<%s/concept/%s> <%s> ?o FILTER(langMatches(lang(?o), "%s"))}'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["title"], lan)
+        else:
+            sq = 'select * from <%s> where {<%s/concept/%s> <%s> ?o }'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["title"])
+        rs = self.db.query(sq)
+        return self.parse_label(rs)
     
-    def get_en_concept_label(self, entity_id):
-        sq = 'select * from <%s> where {<%s/concept/%s> <%s/property/enwiki/label> ?label}'%(GRAPH, PREFIX, entity_id, PREFIX)
-        return self.db.fetch_one_result(sq)
+    def get_title(self, entity_id, lan=None):
+        if 'en' == lan or 'zh' == lan:
+            sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?o FILTER(langMatches(lang(?o), "%s"))}'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["title"], lan)
+        else:
+            sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?o }'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["title"])
+        rs = self.db.query(sq)
+        return self.parse_label(rs)
 
-    def get_ch_concept_label(self, entity_id):
-        ch_baike = ["zhwiki", "baidu", "hudong"]
-        for ch in ch_baike:
-            sq = 'select * from <%s> where {<%s/concept/%s> <%s/property/%s/label> ?label}'%(GRAPH, PREFIX, entity_id, PREFIX, ch)
-            result = self.db.fetch_one_result(sq)
-            if result:
-                return result
-        return ""
+    def get_abstract(self, entity_id, lan=None):
+        sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?o }'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["abstract"])
+        rs = self.db.query(sq)
+        return self.parse_abstract(rs, lan)
 
-    def get_abstract(self, entity_id, lan="en"):
-        if lan == "en":
-            return {"en":self.get_en_abstract(entity_id)}
-        if lan == "ch":
-            return {"ch":self.get_ch_abstract(entity_id)}
-        if lan == "all":
-            return {"en":self.get_en_abstract(entity_id),"ch":self.get_ch_abstract(entity_id)}
+    def parse_label(self, results):
+        d = dict((r.lang, r.value) for r in results)
+        return d
 
-    def get_en_abstract(self, entity_id):
-        sq = 'select * from <%s> where {<%s/instance/%s> <%s/property/enwiki/abstract> ?o }'%(GRAPH, PREFIX, entity_id, PREFIX)
-        return self.db.fetch_one_result(sq)
-
-    def get_ch_abstract(self, entity_id):
-        ch_baike = ["zhwiki", "baidu", "hudong"]
-        for ch in ch_baike:
-            sq = 'select * from <%s> where {<%s/instance/%s> <%s/property/%s/abstract> ?title}'%(GRAPH, PREFIX, entity_id, PREFIX, ch)
-            result = self.db.fetch_one_result(sq)
-            if result:
-                return result
-        return None
-
-    def get_title(self, entity_id, lan="en"):
-        if lan == "en":
-            return {"en":self.get_en_title(entity_id)}
-        if lan == "ch":
-            return {"ch":self.get_ch_title(entity_id)}
-        if lan == "all":
-            return {"en":self.get_en_title(entity_id),"ch":self.get_ch_title(entity_id)}
-
-    def get_en_title(self, entity_id):
-        sq = 'select * from <%s> where {<%s/instance/%s> <%s/property/enwiki/label> ?title}'%(GRAPH, PREFIX, entity_id, PREFIX)
-        return self.db.fetch_one_result(sq)
-
-    def get_ch_title(self, entity_id):
-        ch_baike = ["zhwiki", "baidu", "hudong"]
-        for ch in ch_baike:
-            sq = 'select * from <%s> where {<%s/instance/%s> <%s/property/%s/label> ?title}'%(GRAPH, PREFIX, entity_id, PREFIX, ch)
-            result = self.db.fetch_one_result(sq)
-            if result:
-                return result
-        return None
-
-    def get_fulltext(self, entity_id, lan="en"):
-        if lan == "en":
-            return {"en":self.get_en_fulltext(entity_id)}
-        if lan == "ch":
-            return {"ch":self.get_ch_fulltext(entity_id)}
-        if lan == "all":
-            return {"en":self.get_en_fulltext(entity_id),"ch":self.get_ch_fulltext(entity_id)}
-
-    def get_en_fulltext(self, entity_id):
-        sq = 'select * from <%s> where {<%s/instance/%s> <%s/property/enwiki/fulltext> ?object }'%(GRAPH, PREFIX, entity_id, PREFIX)
-        return self.db.fetch_one_result(sq)
-
-    def get_ch_fulltext(self, entity_id):
-        ch_baike = ["zhwiki", "baidu", "hudong"]
-        for ch in ch_baike:
-            sq = 'select * from <%s> where { <%s/instance/%s> <%s/property/%s/fulltext> ?e}'%(GRAPH, PREFIX, entity_id, PREFIX, ch)
-            result = self.db.fetch_one_result(sq)
-            if result:
-                return result
-        return None
+    def parse_abstract(self, results, lan):
+        d = {}
+        for r in results:
+            if 'enwiki' == r.lang and not 'zh' == lan:
+                d['en'] = r.value
+            if 'baidu' == r.lang and not 'en' == lan:
+                d['zh'] = r.value
+                break
+            if 'hudong' == r.lang and not 'en' == lan:
+                d['zh'] = r.value
+                break
+            if 'zhwiki' == r.lang and not 'en' == lan:
+                d['zh'] = r.value
+                break
+        return d
 
     def get_type_uri(self, entity_id):
         c_uri = []
-        sq = 'select * from <%s> where {<%s/instance/%s> <%s/property/instanceOf> ?type }'%( GRAPH, PREFIX, entity_id, PREFIX)
-        result = self.db.fetch_multi_result(sq)
-        for r in result:
-            c_e_id = r.split("/")[-1]
+        sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?type }'%( GRAPH, PREFIX, entity_id, QUERY_LABEL["type"])
+        qrs = self.db.query(sq)
+        for r in qrs:
+            c_e_id = r.value.split("/")[-1]
             c_uri.append(c_e_id)
         return c_uri
 
     def get_type(self, entity_id, lan="en"):
-        if lan == "en":
-            return {"en":self.get_en_type(entity_id)}
-        if lan == "ch":
-            return {"ch":self.get_ch_type(entity_id)}
-        if lan == "all":
-            return {"en":self.get_en_type(entity_id),"ch":self.get_ch_type(entity_id)}
-
-    def get_en_type(self, entity_id):
-        concepts = []
-        sq = 'select * from <%s> where {<%s/instance/%s> <%s/property/instanceOf> ?type }'%(GRAPH, PREFIX, entity_id, PREFIX)
-        result = self.db.fetch_multi_result(sq)
-        for r in result:
-            c_e_id = r.split("/")[-1]
-            label = self.get_en_concept_label(c_e_id)
-            if label:
-                concepts.append(label)
-        return concepts
-
-    def get_ch_type(self, entity_id):
-        concepts = []
-        sq = 'select * from <%s> where { <%s/instance/%s> <%s/property/instanceOf> ?type}'%(GRAPH, PREFIX, entity_id, PREFIX)
-        result = (self.db.fetch_multi_result(sq))
-        for r in result:
-            c_e_id = r.split("/")[-1]
-            label = self.get_ch_concept_label(c_e_id)
-            if label:
-                concepts.append(label)
-        return concepts
-
-    def get_superclass(self, entity_id, lan="en"):
-        if lan == "en":
-            return {"en":self.get_en_superclass(entity_id)}
-        if lan == "ch":
-            return {"ch":self.get_ch_superclass(entity_id)}
-        if lan == "all":
-            return {"en":self.get_en_superclass(entity_id),"ch":self.get_ch_superclass(entity_id)}
-
-    def get_en_superclass(self, entity_id):
-        concepts = []
-        sq = 'select * from <%s> where { <%s/instance/%s> <%s/property/iSubTopicOf> ?t }'%(GRAPH, PREFIX, entity_id, PREFIX)
-        result = self.db.fetch_multi_result(sq)
-        for r in result:
-            c_e_id = r.split("/")[-1]
-            label = self.get_en_concept_label(c_e_id)
-            if label:
-                concepts.append(label)
-        return concepts
-
-    def get_ch_superclass(self, entity_id):
-        concepts = []
-        sq = 'select * from <%s> where { <%s/instance/%s> <%s/property/iSubTopicOf> ?t}'%(GRAPH, PREFIX, entity_id, PREFIX)
-        result = self.db.fetch_multi_result(sq)
-        for r in result:
-            c_e_id = r.split("/")[-1]
-            label = self.get_ch_concept_label(c_e_id)
-            if label:
-                concepts.append(label)
-        return concepts
+        sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?type }'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["type"])
+        qrs = self.db.query(sq)
+        results = []
+        for r in qrs:
+            c_e_id = r.value.split("/")[-1]
+            label = self.get_concept_label(c_e_id)
+            results.append(label)
+        return results
 
     def get_title_and_image(self, entity_id,lan, n = 1):
         title = self.get_title(entity_id,lan)
-        images = self.get_image(entity_id, n)
+        images = self.get_icon(entity_id)
         return {"title": title, "image": images[0] if len(images) > 0 else ""}
 
-    def get_image(self, entity_id, n = 3):
+    def get_icon(self, entity_id):
+        sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?o FILTER(!langMatches(lang(?o), "baidu"))}'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["icon"])
+        qrs = self.db.query(sq)
+        return [qrs[0].value] if len(qrs) else []
+
+    def get_images(self, entity_id, n = 3):
         image_urls = []
-        lore = ["enwiki","hudong","zhwiki"]
-        for l in lore:
-            sq = 'select * from <%s> where { <%s/instance/%s> <%s/property/%s/image> ?img }'%(GRAPH, PREFIX, entity_id, PREFIX, l)
-            image_urls += self.db.fetch_multi_result(sq)
-            if len(image_urls) > n:
-                break
-        return image_urls[:n] if len(image_urls) >= 3 else image_urls
+        sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?o FILTER(!langMatches(lang(?o), "baidu"))}'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["image"])
+        print sq
+        qrs = self.db.query(sq)
+        return [qr.value for qr in qrs[:n]]  
 
     def get_innerLink(self, entity_id):
 
-        sq = 'select * from <%s> where { <%s/instance/%s> <%s/property/enwiki/innerLink> ?link}'%(GRAPH, PREFIX, entity_id, PREFIX)
-        return self.db.fetch_multi_result(sq)
+        sq = 'select * from <%s> where { <%s/instance/%s> <%s> ?link}'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["related_item"])
+        return self.db.query(sq)
 
     def get_littleentity(self, entity_id, lan):
+        """
+        Get little entity according to entity_id
+        """
         entity = {}
-        entity["_id"] = entity_id
-        entity["uri"] = os.path.join(PREFIX,entity_id)
-        entity["url"] = XLORE_URL_PREFIX+PREFIX+entity_id
+        entity["uri"] = os.path.join(os.path.join(PREFIX,'instance'),entity_id)
+        entity["url"] = os.path.join(XLORE_URL_PREFIX+os.path.join(PREFIX,'instance'),entity_id)
 
         entity["title"] = self.get_title(entity_id, lan)
         entity["type"] = self.get_type(entity_id, lan)
-        entity["super_topic"] = self.get_superclass(entity_id, lan)
         entity["abstract"] = self.get_abstract(entity_id, lan)
-        entity["image"] = self.get_image(entity_id)
+        #entity["image"] = self.get_image(entity_id)
+        entity["image"] = self.get_icon(entity_id)
         return entity
 
     def create_littleentity(self, entity_id, lan):
             
         entity = {}
         entity_id = str(entity_id)
-        entity["_id"] = entity_id
-        entity["uri"] = PREFIX+'/'+entity_id
-        entity["url"] = XLORE_URL_PREFIX+PREFIX+'/'+entity_id
+        entity["uri"] = os.path.join(os.path.join(PREFIX,'instance'),entity_id)
+        entity["url"] = os.path.join(os.path.join(XLORE_URL_PREFIX,os.path.join(PREFIX,'instance')),entity_id)
 
-        q_result = self.get_instance_properties(entity_id)
-        d = self.parse_properties(q_result)
+        qrs = self.get_instance_properties(entity_id)
+        d = {}
+        for qr in qrs:
+            d[qr.prop] = d.get(qr.prop,[]) + [qr]
 
-        entity["title"] = d["label"]
-        entity["type"] = [self.get_concept_label(c.split("/")[-1], lan) for c in d.get("instanceOf",[]) ]
-        entity["super_topic"] = [self.get_concept_label(c.split("/")[-1], lan) for c in d.get("iSubTopicOf",[]) ]
-        if d.has_key("relatedItem"):
-            entity["related_item"] = [self.get_title_and_image(uri.split("/")[-1],"all") for uri in d["relatedItem"]["en"]]+[self.get_title_and_image(uri.split("/")[-1],"all") for uri in d["relatedItem"]["ch"]]
-        else:
-            entity["related_item"] = []
-        if d.has_key("abstract"):
-            entity["abstract"] = {"en":d["abstract"]["en"], "ch":d["abstract"]["ch"]}
-        else:
-            entity["abstract"] = {"en":"","ch":""}
-        entity["image"] = d["image"][0:3] if d.has_key("image") else []
+        result = {}
+
+        entity["title"] = self.parse_label(d[QUERY_LABEL['title']])
+        entity["type"] = [self.get_concept_label(c.value.split("/")[-1], lan) for c in d.get(QUERY_LABEL['type'],[]) ]
+        entity["related_item"] = [self.get_title_and_image(i.value.split("/")[-1], lan) for i in d.get(QUERY_LABEL['related_item'],[])]
+        entity["abstract"] = self.parse_abstract(d[QUERY_LABEL['abstract']], lan)
+        entity["image"] = d["hasIcon"][0] if d.has_key("hasIcon") else []
         return entity
         
 
@@ -471,15 +331,16 @@ if __name__=="__main__":
     #db.has_mention("protocal")
 
     xlore = Xlore()
-    print xlore.get_image(1032938)
-    print xlore.get_abstract(1032938)
-    print xlore.get_fulltext(1032938)
-    print xlore.get_title(6612130)
-    print xlore.get_innerLink(1039711)
-    print xlore.get_type(1039711,"all")
-    print xlore.get_superclass(1039711,"all")
-    xlore.create_littleentity(1022540,"all")
-    xlore.create_littleentity(1074721,"all")
-    xlore.create_littleentity(1022540,"all")
-    xlore.create_littleentity(1756117,"all")
+    print xlore.get_images(3)
+    #print xlore.get_icon(3)
+    #print xlore.get_abstract(3)
+    #print xlore.get_title(3)
+    #print xlore.get_innerLink(1039711)
+    #print xlore.get_type(2,"all")
+    #print xlore.get_littleentity("2","all")
+    #print xlore.create_littleentity(2,"all")
+    #xlore.create_littleentity(5,"all")
+    #xlore.create_littleentity(19,"all")
+    #xlore.create_littleentity(40,"all")
     
+    #print xlore.db.query('select * from <xlore2> where {<http://xlore.org/instance/2> ?p ?type }')
