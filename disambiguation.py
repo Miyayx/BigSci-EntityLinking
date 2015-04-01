@@ -41,8 +41,8 @@ def context_sim(mention, cans, doc, db, num=0, threshold=None, lan="en"):
             if isinstance(a, dict):
                 if lan == "all":
                     lan = "en"
-                a = a[lan]
                 print a
+                a = a[lan]
             if a:
                 print (c+' ' +'has abstract')
                 print a

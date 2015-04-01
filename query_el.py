@@ -211,13 +211,13 @@ if __name__=="__main__":
         param['query_str'] = i
         e = QueryEL(param)
         e.set_candb(db)
-        e.set_graph_db(xlore)
+        e.set_graph(xlore)
 
         p = stanford_parser.Parser()
         e.set_en_parser(p)
 
         e.run()
 
-        for entity in e.entities:
+        for entity in e.queries:
             print entity
 

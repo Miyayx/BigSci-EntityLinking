@@ -232,7 +232,7 @@ class Xlore():
         return d
 
     def parse_abstract(self, results, lan):
-        d = {}
+        d = {'en':'', 'zh':''}
         for r in results:
             if 'enwiki' == r.lang and not 'zh' == lan:
                 d['en'] = r.value
@@ -318,10 +318,10 @@ class Xlore():
         result = {}
 
         entity["title"] = self.parse_label(d[QUERY_LABEL['title']])
-        entity["type"] = [self.get_concept_label(c.value.split("/")[-1], lan) for c in d.get(QUERY_LABEL['type'],[]) ]
-        entity["related_item"] = [self.get_title_and_image(i.value.split("/")[-1], lan) for i in d.get(QUERY_LABEL['related_item'],[])]
-        entity["abstract"] = self.parse_abstract(d[QUERY_LABEL['abstract']], lan)
-        entity["image"] = d["hasIcon"][0] if d.has_key("hasIcon") else []
+        entity["type"] = [self.get_concept_label(c.value.split("/")[-1], lan) for c in d.get(QUERY_LABEL['type'],[]) ] if "type" in d else []
+        entity["related_item"] = [self.get_title_and_image(i.value.split("/")[-1], lan) for i in d.get(QUERY_LABEL['related_item'],[])] if "related_item" in d else []
+        entity["abstract"] = self.parse_abstract(d[QUERY_LABEL['abstract']], lan) if "abstract" in d else {}
+        entity["image"] = d["hasIcon"][0] if d.has_key("hasIcon") else [] 
         return entity
         
 
@@ -331,16 +331,16 @@ if __name__=="__main__":
     #db.has_mention("protocal")
 
     xlore = Xlore()
-    print xlore.get_images(3)
+    #print xlore.get_images(3)
     #print xlore.get_icon(3)
     #print xlore.get_abstract(3)
     #print xlore.get_title(3)
     #print xlore.get_innerLink(1039711)
     #print xlore.get_type(2,"all")
     #print xlore.get_littleentity("2","all")
-    #print xlore.create_littleentity(2,"all")
-    #xlore.create_littleentity(5,"all")
-    #xlore.create_littleentity(19,"all")
-    #xlore.create_littleentity(40,"all")
+    print xlore.create_littleentity(2,"all")
+    xlore.create_littleentity(5,"all")
+    xlore.create_littleentity(19,"all")
+    xlore.create_littleentity(40,"all")
     
     #print xlore.db.query('select * from <xlore2> where {<http://xlore.org/instance/2> ?p ?type }')

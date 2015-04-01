@@ -58,7 +58,6 @@ class BigSciEL():
             if len(q.entities):
                 self.entities.append(q.entities[0])
 
-
     def set_candb(self, db):
         """
         Set Candidateset Mysql db
@@ -186,7 +185,7 @@ if __name__=="__main__":
         param['query_str'] = i
         e = BigSciEL(param)
         e.set_candb(db)
-        e.set_graph_db(xlore)
+        e.set_graph(xlore)
         e.run()
 
         for entity in e.entities:
