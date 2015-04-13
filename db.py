@@ -281,7 +281,6 @@ class Xlore():
     def get_images(self, entity_id, n = 3):
         image_urls = []
         sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?o FILTER(!langMatches(lang(?o), "baidu"))}'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["image"])
-        print sq
         qrs = self.db.query(sq)
         return [qr.value for qr in qrs[:n]]  
 
@@ -297,12 +296,9 @@ class Xlore():
         """
         r = set()
         uris = self.get_type_uri(e_id)
-        print "type uri:",uris
         for u in uris:
             tops = self.get_topclass_from_con(u)
-            print tops
             r.update(set(tops))
-        print r
         return r
 
     def get_topclass_from_con(self, c_id):

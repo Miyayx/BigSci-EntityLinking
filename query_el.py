@@ -155,7 +155,10 @@ class QueryEL():
                 continue
 
             print "Query String:",q.text
-            q.text = q.text.encode('utf-8')
+            try:
+                q.text = q.text.encode('utf-8')
+            except:
+                pass
             cans = self.candb.get_candidateset(q.text)
             print "length of candidates",len(cans)
             if cans and len(cans) > 0:
