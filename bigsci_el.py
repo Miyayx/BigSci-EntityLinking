@@ -93,6 +93,19 @@ class BigSciEL():
                     if p in domain:
                         return True
         return False
+
+    def is_in_domain2(self, c):
+        """
+        If c(uri) is in specific domain
+        67:Culture, 156:Science, 281:Personal life, 366:Nature, 80:Society, 431:Arts, 524:Technology, 235:Economies, 353:History, 271:People, 291:Geography, 180:Sports
+        """
+        domain = ['156', '366', '524']
+        
+        uris = self.graph.get_topclass_from_ins(c)
+        for u in uris:
+            if u in domain:
+                return True
+        return False
     
     def extract_mentions(self):
         """
@@ -152,7 +165,7 @@ class BigSciEL():
 
                 r = []
                 for c in can_sim:
-                    if self.is_in_domain(c[0]):
+                    if self.is_in_domain2(c[0]):
                         print c,"is in domain"
                         r.append(c)
                     if len(r) == self.limit:
