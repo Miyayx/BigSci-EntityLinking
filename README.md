@@ -68,3 +68,6 @@ Setting：
 
 ##Test Demo
     python web_test.py
+
+
+change both config/db.cfg and /etc/odbc.ini to ensure being able to locate virtuoso

@@ -185,6 +185,7 @@ QUERY_LABEL = {
         "related_item":"http://xlore.org/property#hasReferedTo",
         "image"       :"http://xlore.org/property#hasImage",
         "icon"        :"http://xlore.org/property#hasIcon",
+        "topclass"    :"http://xlore.org/property#hasTopClass"
         }
 
 class Xlore():
@@ -266,10 +267,11 @@ class Xlore():
             results.append(label)
         return results
 
-    def get_title_and_image(self, entity_id,lan, n = 1):
+    def get_title_and_image(self, uri, lan, n = 1):
+        entity_id = uri.split('/')[-1]
         title = self.get_title(entity_id,lan)
         images = self.get_icon(entity_id)
-        return {"title": title, "image": images[0] if len(images) > 0 else ""}
+        return {"uri":uri, "title": title, "image": images[0] if len(images) > 0 else ""}
 
     def get_icon(self, entity_id):
         sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?o FILTER(!langMatches(lang(?o), "baidu"))}'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["icon"])
@@ -287,6 +289,33 @@ class Xlore():
 
         sq = 'select * from <%s> where { <%s/instance/%s> <%s> ?link}'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["related_item"])
         return self.db.query(sq)
+
+
+    def get_topclass_from_ins(self, e_id):
+        """
+        获得instance的topclass集合, 只有concept有topclass属性，所以instance的topclass是它所属的concept的topclass
+        """
+        r = set()
+        uris = self.get_type_uri(e_id)
+        print "type uri:",uris
+        for u in uris:
+            tops = self.get_topclass_from_con(u)
+            print tops
+            r.update(set(tops))
+        print r
+        return r
+
+    def get_topclass_from_con(self, c_id):
+        """
+        获得concept的topclass集合, 通过sparql查询
+        """
+        c_uri = []
+        sq = 'select * from <%s> where {<%s/concept/%s> <%s> ?tc }'%(GRAPH, PREFIX, c_id, QUERY_LABEL["topclass"])
+        qrs = self.db.query(sq)
+        for r in qrs:
+            c_id = r.value.split("/")[-1]
+            c_uri.append(c_id)
+        return c_uri
 
     def get_littleentity(self, entity_id, lan):
         """
@@ -316,14 +345,18 @@ class Xlore():
             d[qr.prop] = d.get(qr.prop,[]) + [qr]
 
         result = {}
+        #print d[QUERY_LABEL['abstract']]
 
         entity["title"] = self.parse_label(d[QUERY_LABEL['title']])
-        entity["type"] = [self.get_concept_label(c.value.split("/")[-1], lan) for c in d.get(QUERY_LABEL['type'],[]) ] if "type" in d else []
-        entity["related_item"] = [self.get_title_and_image(i.value.split("/")[-1], lan) for i in d.get(QUERY_LABEL['related_item'],[])] if "related_item" in d else []
-        entity["abstract"] = self.parse_abstract(d[QUERY_LABEL['abstract']], lan) if "abstract" in d else {}
-        entity["image"] = d["hasIcon"][0] if d.has_key("hasIcon") else [] 
+        entity["type"] = [self.get_concept_label(c.value.split("/")[-1], lan) for c in d.get(QUERY_LABEL['type'],[]) ] if QUERY_LABEL["type"] in d else []
+        r_items = d.get(QUERY_LABEL['related_item'], [])
+        #print r_items
+        r_items = sorted(r_items, key=lambda x:int(x.value.split('/')[-1]))
+        entity["related_item"] = [self.get_title_and_image(i.value, lan) for i in r_items[:20]] 
+        entity["abstract"] = self.parse_abstract(d[QUERY_LABEL['abstract']], lan) if QUERY_LABEL["abstract"] in d else {}
+        entity["image"] = [d[QUERY_LABEL["icon"]][0].value] if QUERY_LABEL["icon"] in d else [] 
         return entity
-        
+
 
 if __name__=="__main__":
     #db = DB()
@@ -331,16 +364,14 @@ if __name__=="__main__":
     #db.has_mention("protocal")
 
     xlore = Xlore()
-    #print xlore.get_images(3)
-    #print xlore.get_icon(3)
-    #print xlore.get_abstract(3)
-    #print xlore.get_title(3)
-    #print xlore.get_innerLink(1039711)
-    #print xlore.get_type(2,"all")
-    #print xlore.get_littleentity("2","all")
-    print xlore.create_littleentity(2,"all")
-    xlore.create_littleentity(5,"all")
-    xlore.create_littleentity(19,"all")
-    xlore.create_littleentity(40,"all")
+   # print xlore.get_images(3)
+   # print xlore.get_icon(3)
+   # print xlore.get_abstract(3)
+   # print xlore.get_title(3)
+   # print xlore.get_innerLink(1039711)
+   # print xlore.get_type(2,"all")
+   # print xlore.get_littleentity("2","all")
+    result = xlore.create_littleentity(3,"all")
+    print json.dumps(result, indent=2)
     
     #print xlore.db.query('select * from <xlore2> where {<http://xlore.org/instance/2> ?p ?type }')
