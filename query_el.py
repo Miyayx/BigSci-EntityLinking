@@ -97,12 +97,11 @@ class QueryEL():
         last = 0
         i  = 0
         print "seg_list",seg_list
+        if type(seg_list[0]) == list: #不同系统上的返回结果格式不一样,我们想要的是[('word','LOCATION'),('people','PERSON')],但有的是[[('word','LOCATION')]],这种情况要把里面的list提取出来
+            seg_list = seg_list[0]
         while i < len(seg_list):
             segs = []
-            try:
-                word, tag = seg_list[i]
-            except:
-                word, tag = seg_list[0][i]
+            word, tag = seg_list[i]
             if tag in types:
                 j = i
                 # 属于指定类型，类型相同且连续的，合到一起
