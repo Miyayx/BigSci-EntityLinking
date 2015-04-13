@@ -96,10 +96,13 @@ class QueryEL():
         begin = 0
         last = 0
         i  = 0
-        print seg_list
+        print "seg_list",seg_list
         while i < len(seg_list):
             segs = []
-            word, tag = seg_list[i]
+            try:
+                word, tag = seg_list[i]
+            except:
+                word, tag = seg_list[0][i]
             if tag in types:
                 j = i
                 # 属于指定类型，类型相同且连续的，合到一起
