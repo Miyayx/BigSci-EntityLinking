@@ -22,6 +22,8 @@ keg@Tsinghua
         yum install unixODBC unixODBC-devel
         pip install pyodbc 
         pip install rdflib
+        pip install SPARQLWrapper
+        pip install simplejson
 
 * Ubuntu:
 
