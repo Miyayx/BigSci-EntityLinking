@@ -19,6 +19,7 @@ keg@Tsinghua
 ###Virtuoso
 * Fedora:
 
+        yum install virtuoso-opensources
         yum install unixODBC unixODBC-devel
         pip install pyodbc 
         pip install rdflib
@@ -27,6 +28,7 @@ keg@Tsinghua
 
 * Ubuntu:
 
+        apt-get install virtuoso-opensources
         apt-get install unixODBC unixODBC-dev
         pip install pyodbc 
         pip install rdflib
@@ -48,6 +50,10 @@ Setting：
 * twisted 
 
         pip install twisted
+
+*jieba
+        
+        pip install jieba
 
 ##Others
 * Fedora
