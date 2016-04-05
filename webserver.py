@@ -18,6 +18,9 @@ from model.little_entity import LittleEntity
 
 PREFIX = "http://keg.cs.tsinghua.edu.cn/instance/"
 
+from logger import *
+initialize_logger('./entity_linking.log')
+
 class EntityEncoder(json.JSONEncoder):  
     def default(self, obj):  
         if isinstance(obj, LittleEntity):  
@@ -33,18 +36,16 @@ class LinkingResource(Resource):
         request.setHeader("Access-Control-Allow-Origin","*")
         request.setHeader("Content-Type","application/json")
         
-        return self.render_POST(request)
-
-    def render_POST(self, request):
-        request.setHeader("Access-Control-Allow-Origin","*")
-        request.setHeader("Content-Type","application/json")
-
         args = dict((k,v[0]) for k,v in request.args.items())
-        print "request args:",args
+        logging.info("request args: %s",str(args))
         if not args.has_key('type') or len(args['type']) == 0:
             args['type'] = 'query'
             
         if args['type'] == 'query':
+
+            logging.info('Type: %s'%args['type'])
+            logging.info('Query String: %s'%args['query_str'])
+
             e = BigSciEL(args)
             e.set_candb(self.source["candb"])
             e.set_graph(self.source["graph"])
@@ -59,6 +60,10 @@ class LinkingResource(Resource):
             return json.dumps(data, indent=2)
 
         if args['type'] == 'abstract':
+
+            logging.info('Type: %s'%args['type'])
+            logging.info('Query String: %s'%args['text'])
+
             e = AbstractEL(args)
             e.set_candb(self.source["candb"])
             e.set_graph(self.source["graph"])
@@ -76,6 +81,10 @@ class LinkingResource(Resource):
             return json.dumps(data, indent=2)
 
         if args['type'] == 'el':
+
+            logging.info('Type: %s'%args['type'])
+            logging.info('Query String: %s'%args['query_str'])
+
             e = QueryEL(args)
             e.set_candb(self.source["candb"])
             e.set_graph(self.source["graph"])
