@@ -45,7 +45,7 @@ Setting：
 * SPARQLWrapper
 
 ```
-pip install SPARQLWrapper  #使用SPARQLWrapper接口类型时需要，见db.py
+pip install SPARQLWrapper  #使用SPARQLWrapper接口类型时需要，见db.py。为防止`Segmentation fault (core dumped)`错误，用这个比较合适
 ```
 
 * nltk 

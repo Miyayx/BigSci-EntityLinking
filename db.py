@@ -196,11 +196,11 @@ class Xlore():
         import sys
         if re.match('linux',sys.platform):#Linux
             #self.db = JenaVirtDB(**configs)
-            self.db = OdbcVirtDB(**configs)
-            #self.db = WrapperVirtDB(configs['host'], "8890")
+            #self.db = OdbcVirtDB(**configs)
+            self.db = WrapperVirtDB(configs['host'], "8890")
         else:
-            self.db = OdbcVirtDB(**configs)
-            #self.db = WrapperVirtDB(configs['host'], "8890")
+            #self.db = OdbcVirtDB(**configs)
+            self.db = WrapperVirtDB(configs['host'], "8890")
         self.GRAPH = configs['graph']
 
     def get_instance_properties(self, entity_id):
@@ -335,8 +335,6 @@ class Xlore():
         entity["uri"] = os.path.join(os.path.join(PREFIX, 'instance'),entity_id)
         entity["url"] = os.path.join(os.path.join(XLORE_URL_PREFIX,os.path.join(PREFIX, 'instance')), entity_id)
 
-        print "entity_id", entity_id
-
         qrs = self.get_instance_properties(entity_id)
 
         d = {}
@@ -344,10 +342,8 @@ class Xlore():
             d[qr.prop] = d.get(qr.prop,[]) + [qr]
 
         result = {}
-        #print d[QUERY_LABEL['abstract']]
 
-        print d
-        entity["title"] = self.parse_label(d[QUERY_LABEL['title']])
+        entity["title"] = self.parse_label(d[QUERY_LABEL['title']]) if QUERY_LABEL['title'] in d else None
         entity["type"] = [self.get_concept_label(c.value.split("/")[-1], lan) for c in d.get(QUERY_LABEL['type'],[]) ] if QUERY_LABEL["type"] in d else []
         r_items = d.get(QUERY_LABEL['related_item'], [])
         #print r_items
