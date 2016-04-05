@@ -20,16 +20,22 @@ keg@Tsinghua
 * Fedora:
 
 ```
+yum install virtuoso-opensources
 yum install unixODBC unixODBC-devel
 pip install pyodbc 
 pip install rdflib
+pip install SPARQLWrapper
+pip install simplejson
 ```
 
 * Ubuntu:
 
 ```
+apt-get install virtuoso-opensources
 apt-get install unixODBC unixODBC-dev
 pip install pyodbc 
+pip install SPARQLWrapper
+pip install simplejson
 pip install rdflib
 ```
 
@@ -56,6 +62,10 @@ pip install SPARQLWrapper  #使用SPARQLWrapper接口类型时需要，见db.py
 * twisted 
 
         pip install twisted
+
+*jieba
+        
+        pip install jieba
 
 ##Others
 * Fedora
