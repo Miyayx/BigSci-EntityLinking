@@ -14,7 +14,7 @@ from virtdb import *
 class MySQLDB():
 
     configs = ConfigTool.parse_config("./config/db.cfg","MySQL")
-    print "configs:",configs
+    print "configs:",
     HOST   = configs["host"]
     PORT   = int(configs["port"])
     USER   = configs["user"]
@@ -164,7 +164,7 @@ class MySQLDB():
 XLORE_URL="http://xlore.org/sigInfo.action"
 XLORE_URL_PREFIX="http://xlore.org/sigInfo.action?uri="
 PREFIX = "http://xlore.org"
-GRAPH = 'xlore2'
+#GRAPH = 'xlore2'
 
 """
 Format 修改记录：
@@ -196,35 +196,35 @@ class Xlore():
         import sys
         if re.match('linux',sys.platform):#Linux
             #self.db = JenaVirtDB(**configs)
-            #self.db = OdbcVirtDB(**configs)
-            self.db = WrapperVirtDB(configs['host'], "8890")
+            self.db = OdbcVirtDB(**configs)
+            #self.db = WrapperVirtDB(configs['host'], "8890")
         else:
-            #self.db = OdbcVirtDB(**configs)
-            self.db = WrapperVirtDB(configs['host'], "8890")
-        GRAPH = configs['graph']
+            self.db = OdbcVirtDB(**configs)
+            #self.db = WrapperVirtDB(configs['host'], "8890")
+        self.GRAPH = configs['graph']
 
     def get_instance_properties(self, entity_id):
-        sq = 'select * from <%s> where {<%s/instance/%s> ?p ?o}'%(GRAPH, PREFIX, entity_id)
+        sq = 'select * from <%s> where {<%s/instance/%s> ?p ?o}'%(self.GRAPH, PREFIX, entity_id)
         return self.db.query(sq)
 
     def get_concept_label(self, entity_id, lan=None):
         if 'en' == lan or 'zh' == lan:
-            sq = 'select * from <%s> where {<%s/concept/%s> <%s> ?o FILTER(langMatches(lang(?o), "%s"))}'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["title"], lan)
+            sq = 'select * from <%s> where {<%s/concept/%s> <%s> ?o FILTER(langMatches(lang(?o), "%s"))}'%(self.GRAPH, PREFIX, entity_id, QUERY_LABEL["title"], lan)
         else:
-            sq = 'select * from <%s> where {<%s/concept/%s> <%s> ?o }'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["title"])
+            sq = 'select * from <%s> where {<%s/concept/%s> <%s> ?o }'%(self.GRAPH, PREFIX, entity_id, QUERY_LABEL["title"])
         rs = self.db.query(sq)
         return self.parse_label(rs)
     
     def get_title(self, entity_id, lan=None):
         if 'en' == lan or 'zh' == lan:
-            sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?o FILTER(langMatches(lang(?o), "%s"))}'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["title"], lan)
+            sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?o FILTER(langMatches(lang(?o), "%s"))}'%(self.GRAPH, PREFIX, entity_id, QUERY_LABEL["title"], lan)
         else:
-            sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?o }'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["title"])
+            sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?o }'%(self.GRAPH, PREFIX, entity_id, QUERY_LABEL["title"])
         rs = self.db.query(sq)
         return self.parse_label(rs)
 
     def get_abstract(self, entity_id, lan=None):
-        sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?o }'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["abstract"])
+        sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?o }'%(self.GRAPH, PREFIX, entity_id, QUERY_LABEL["abstract"])
         rs = self.db.query(sq)
         return self.parse_abstract(rs, lan)
 
@@ -250,7 +250,7 @@ class Xlore():
 
     def get_type_uri(self, entity_id):
         c_uri = []
-        sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?type }'%( GRAPH, PREFIX, entity_id, QUERY_LABEL["type"])
+        sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?type }'%( self.GRAPH, PREFIX, entity_id, QUERY_LABEL["type"])
         qrs = self.db.query(sq)
         for r in qrs:
             c_e_id = r.value.split("/")[-1]
@@ -258,7 +258,7 @@ class Xlore():
         return c_uri
 
     def get_type(self, entity_id, lan="en"):
-        sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?type }'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["type"])
+        sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?type }'%(self.GRAPH, PREFIX, entity_id, QUERY_LABEL["type"])
         qrs = self.db.query(sq)
         results = []
         for r in qrs:
@@ -274,19 +274,19 @@ class Xlore():
         return {"uri":uri, "title": title, "image": images[0] if len(images) > 0 else ""}
 
     def get_icon(self, entity_id):
-        sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?o FILTER(!langMatches(lang(?o), "baidu"))}'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["icon"])
+        sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?o FILTER(!langMatches(lang(?o), "baidu"))}'%(self.GRAPH, PREFIX, entity_id, QUERY_LABEL["icon"])
         qrs = self.db.query(sq)
         return [qrs[0].value] if len(qrs) else []
 
     def get_images(self, entity_id, n = 3):
         image_urls = []
-        sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?o FILTER(!langMatches(lang(?o), "baidu"))}'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["image"])
+        sq = 'select * from <%s> where {<%s/instance/%s> <%s> ?o FILTER(!langMatches(lang(?o), "baidu"))}'%(self.GRAPH, PREFIX, entity_id, QUERY_LABEL["image"])
         qrs = self.db.query(sq)
         return [qr.value for qr in qrs[:n]]  
 
     def get_innerLink(self, entity_id):
 
-        sq = 'select * from <%s> where { <%s/instance/%s> <%s> ?link}'%(GRAPH, PREFIX, entity_id, QUERY_LABEL["related_item"])
+        sq = 'select * from <%s> where { <%s/instance/%s> <%s> ?link}'%(self.GRAPH, PREFIX, entity_id, QUERY_LABEL["related_item"])
         return self.db.query(sq)
 
 
@@ -306,7 +306,7 @@ class Xlore():
         获得concept的topclass集合, 通过sparql查询
         """
         c_uri = []
-        sq = 'select * from <%s> where {<%s/concept/%s> <%s> ?tc }'%(GRAPH, PREFIX, c_id, QUERY_LABEL["topclass"])
+        sq = 'select * from <%s> where {<%s/concept/%s> <%s> ?tc }'%(self.GRAPH, PREFIX, c_id, QUERY_LABEL["topclass"])
         qrs = self.db.query(sq)
         for r in qrs:
             c_id = r.value.split("/")[-1]
@@ -332,10 +332,13 @@ class Xlore():
             
         entity = {}
         entity_id = str(entity_id)
-        entity["uri"] = os.path.join(os.path.join(PREFIX,'instance'),entity_id)
-        entity["url"] = os.path.join(os.path.join(XLORE_URL_PREFIX,os.path.join(PREFIX,'instance')),entity_id)
+        entity["uri"] = os.path.join(os.path.join(PREFIX, 'instance'),entity_id)
+        entity["url"] = os.path.join(os.path.join(XLORE_URL_PREFIX,os.path.join(PREFIX, 'instance')), entity_id)
+
+        print "entity_id", entity_id
 
         qrs = self.get_instance_properties(entity_id)
+
         d = {}
         for qr in qrs:
             d[qr.prop] = d.get(qr.prop,[]) + [qr]
@@ -343,6 +346,7 @@ class Xlore():
         result = {}
         #print d[QUERY_LABEL['abstract']]
 
+        print d
         entity["title"] = self.parse_label(d[QUERY_LABEL['title']])
         entity["type"] = [self.get_concept_label(c.value.split("/")[-1], lan) for c in d.get(QUERY_LABEL['type'],[]) ] if QUERY_LABEL["type"] in d else []
         r_items = d.get(QUERY_LABEL['related_item'], [])

@@ -19,19 +19,29 @@ keg@Tsinghua
 ###Virtuoso
 * Fedora:
 
-        yum install unixODBC unixODBC-devel
-        pip install pyodbc 
-        pip install rdflib
+```
+yum install unixODBC unixODBC-devel
+pip install pyodbc 
+pip install rdflib
+```
 
 * Ubuntu:
 
-        apt-get install unixODBC unixODBC-dev
-        pip install pyodbc 
-        pip install rdflib
+```
+apt-get install unixODBC unixODBC-dev
+pip install pyodbc 
+pip install rdflib
+```
 
 Setting：
 
 ##Third-party package
+* SPARQLWrapper
+
+```
+pip install SPARQLWrapper  #使用SPARQLWrapper接口类型时需要，见db.py
+```
+
 * nltk 
 
         pip install numpy

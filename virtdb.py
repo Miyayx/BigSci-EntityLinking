@@ -168,7 +168,7 @@ class OdbcVirtDB(VirtDB):
             results = [(r[0][0], r[1][0]) for r in cursor.execute(sq).fetchall()]
             #if results and len(results) > 0 and type(results[0]) == tuple:
             #    results = [r[0] for r in results]
-        except TypeError:
+        except TypeError, e:
             return []
         finally:
             cursor.close()

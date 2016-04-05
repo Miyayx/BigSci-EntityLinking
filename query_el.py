@@ -204,13 +204,14 @@ if __name__=="__main__":
 
     db = MySQLDB()
     xlore = Xlore()
-    l = ["I went to New York to meet John Smith"]
+    #l = ["I went to New York to meet John Smith"]
     #l = ["Micheal Jordan"]
     #l = ["machine learning"]
+    l = ["data mining", "machine learning" ,"deep learning", "深度学习"]
     for i in l:
         param = {}
         param['type']  = 'query'
-        param['limit'] = 1
+        param['limit'] = 3
         param['text']  = ""
         param['t']     = datetime.datetime.now()
         param['query_str'] = i
