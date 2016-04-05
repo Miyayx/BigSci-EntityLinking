@@ -11,6 +11,7 @@ import json
 from abstract_el import AbstractEL
 from query_el import QueryEL
 from bigsci_el import BigSciEL
+from search_item import ItemSearch
 import stanford_parser 
 from db import *
 from model.little_entity import LittleEntity
@@ -115,6 +116,29 @@ class LinkingResource(Resource):
         entity["image"]     = e.image
         return entity
 
+class SearchResource(Resource):
+
+    def __init__(self, source):
+        self.source = source
+
+    def render_GET(self, request):
+        request.setHeader("Access-Control-Allow-Origin","*")
+        request.setHeader("Content-Type","application/json")
+        
+        args = dict((k,v[0]) for k,v in request.args.items())
+        print "request args:",args
+        if not 'q' in args or len(args['q']) == 0:
+            return json.dumps({})
+            
+        e = ItemSearch(args)
+        e.set_candb(self.source["candb"])
+        e.set_graph(self.source["graph"])
+        e.run()
+        data = {}
+        data["q"] = e.query_str
+        es = [entity.__dict__ for entity in e.entities ]
+        data["data"] = es
+        return json.dumps(data, indent=2)
 
 class PageResource(Resource):
      
@@ -133,6 +157,9 @@ if __name__=="__main__":
     #root.putChild("show", PageResource())
     root.putChild("show", File("./web_ui"))
     root.putChild("linking", LinkingResource(source))
+    search = Resource()
+    root.putChild("search", search)
+    search.putChild("items", SearchResource(source))
 
     from twisted.internet import reactor
 
