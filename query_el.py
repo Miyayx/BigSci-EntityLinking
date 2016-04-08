@@ -46,9 +46,8 @@ class QueryEL():
 
     def run(self):
         self.queries = []
-        print "query_str:",self.query_str
 
-        if re.match(ur"[\u4e00-\u9fff]+", self.query_str):#Chinese
+        if re.search(ur"[\u4e00-\u9fff]+", self.query_str):#Chinese
             self.lan = "ch"
             if len(self.query_str) > 5 :
                 self.extract_zh_mentions(self.query_str)
@@ -96,7 +95,6 @@ class QueryEL():
         begin = 0
         last = 0
         i  = 0
-        print "seg_list",seg_list
         if type(seg_list[0]) == list: #不同系统上的返回结果格式不一样,我们想要的是[('word','LOCATION'),('people','PERSON')],但有的是[[('word','LOCATION')]],这种情况要把里面的list提取出来
             seg_list = seg_list[0]
         while i < len(seg_list):

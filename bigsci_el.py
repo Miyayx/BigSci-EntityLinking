@@ -19,6 +19,11 @@ class BigSciEL():
     def __init__(self, args):
         self.query_str = args["query_str"] if args.has_key("query_str") else None
         self.text = args["text"] if args.has_key("text") else None
+        try:
+            self.query_str = self.query_str.decode('utf-8')
+            self.text = self.text.decode('utf-8')
+        except:
+            pass
         if args.has_key("lan"):
             if args["lan"] == "en":
                 self.lan = "en"

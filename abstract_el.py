@@ -20,6 +20,10 @@ class AbstractEL():
     def __init__(self, args):
         #print "Abstract", text
         self.text = args["text"] 
+        try:
+            self.text = self.text.decode('utf-8')
+        except:
+            pass
         self.limit = args["limit"] if args.has_key('limit') else 1
         self.queries = []
         self.threshold = 0
