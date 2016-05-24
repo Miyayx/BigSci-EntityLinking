@@ -12,6 +12,7 @@ from abstract_el import AbstractEL
 from query_el import QueryEL
 from bigsci_el import BigSciEL
 from search_item import ItemSearch
+from uri_el import UriEL
 import stanford_parser 
 from db import *
 from model.little_entity import LittleEntity
@@ -99,9 +100,21 @@ class LinkingResource(Resource):
             qs = [query.d() for query in e.queries]
             return json.dumps(qs,indent=2)
 
+        if args['type'] == 'uri':
+
+            logging.info('Type: %s'%args['type'])
+            logging.info('URI: %s'%args['uri'])
+
+            e = UriEL(args)
+            e.set_candb(self.source["candb"])
+            e.set_graph(self.source["graph"])
+            e.run()
+            return json.dumps(e.entity,indent=2)
+
         else:
             #raise Exception
             print "NO Such type"
+
 
     def parse_result(self, q):
         query = {}

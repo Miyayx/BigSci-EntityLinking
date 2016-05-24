@@ -353,6 +353,30 @@ class Xlore():
         entity["image"] = [d[QUERY_LABEL["icon"]][0].value] if QUERY_LABEL["icon"] in d else [] 
         return entity
 
+    def create_academic_entity(self, entity_id, lan):
+            
+        entity = {}
+        entity_id = str(entity_id)
+        entity["uri"] = os.path.join(os.path.join(PREFIX, 'instance'),entity_id)
+        entity["url"] = os.path.join(os.path.join(XLORE_URL_PREFIX,os.path.join(PREFIX, 'instance')), entity_id)
+
+        qrs = self.get_instance_properties(entity_id)
+
+        d = {}
+        for qr in qrs:
+            d[qr.prop] = d.get(qr.prop,[]) + [qr]
+
+        result = {}
+
+        entity["title"] = self.parse_label(d[QUERY_LABEL['title']]) if QUERY_LABEL['title'] in d else None
+        entity["type"] = [self.get_concept_label(c.value.split("/")[-1], lan) for c in d.get(QUERY_LABEL['type'],[]) ] if QUERY_LABEL["type"] in d else []
+        r_items = d.get(QUERY_LABEL['related_item'], [])
+        #print r_items
+        r_items = sorted(r_items, key=lambda x:int(x.value.split('/')[-1]))
+        entity["related_item"] = [i.value for i in r_items[:]] 
+        entity["abstract"] = self.parse_abstract(d[QUERY_LABEL['abstract']], lan) if QUERY_LABEL["abstract"] in d else {}
+        return entity
+
 
 if __name__=="__main__":
     #db = DB()
